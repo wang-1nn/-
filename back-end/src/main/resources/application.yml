@@ -1,0 +1,27 @@
+spring:
+  neo4j:
+    uri: <neo4j instance URI>
+    authentication:
+      username: <neo4j username>
+      password: <neo4j password>
+  ai:
+    vectorstore:
+      neo4j:
+        initialize-schema: true
+        database-name: neo4j
+        index-name: custom-index
+        embedding-dimension: 1536
+        distance-type: cosine
+  datasource:
+    url: jdbc:mysql://localhost:3306/ruanjianbei
+    username: root
+    password: 459459
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis:
+  #mapper????
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: org/example/backend/entity/pojo
+  configuration:
+    #??????
+    map-underscore-to-camel-case: true

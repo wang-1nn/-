@@ -1,0 +1,46 @@
+spring:
+  neo4j:
+    uri: neo4j://localhost:7687
+    authentication:
+      username: neo4j
+      password: qw459459
+  ai:
+    vectorstore:
+      neo4j:
+        initialize-schema: true
+        database-name: neo4j
+        index-name: custom-index
+        embedding-dimension: 1536
+        distance-type: cosine
+
+    openai:
+      api-key: sk-1F7AmEk8KXQfjoSF4axKMIbbz1JnL13LmcLqygbgn5yCSELl
+      base-url: https://xiaoai.plus
+    chat:
+      options:
+        temperature: 0.3
+        model: gpt-4-turbo
+      memory:
+        repository:
+          jdbc:
+            platform: mariadb                    # ← 强制使用已有脚本
+            initialize-schema: always
+  datasource:
+    url: jdbc:mysql://localhost:3306/ruanjianbei
+    username: root
+    password: 459459
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  cos:
+    client:
+      accessKey: AKIDq7F70qSTbWDgz9A2jXBcwDVcaSTEjEi3
+      secretKey: LXfj5KMG3rTvDKI8oZJsHYfcUBg2EEfx
+      region: ap-beijing
+      bucket: news-1330329736
+      basrurl: https://news-1330329736.cos.ap-beijing.myqcloud.com
+mybatis:
+  #mapper????
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: org/example/backend/entity/pojo
+  configuration:
+    #??????
+    map-underscore-to-camel-case: true

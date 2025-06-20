@@ -10,9 +10,19 @@ import java.util.Date;
  */
 @Data
 public class User {
+    public String Token;
     private String userId;        // 用户唯一标识
     private String username;      // 用户登录名
     private String password;  // 密码哈希值
+
+    public String getToken() {
+        return Token;
+    }
+
+    public void setToken(String token) {
+        Token = token;
+    }
+
     private String realName;      // 真实姓名
     private String email;         // 电子邮箱
     private String phone;         // 电话号码

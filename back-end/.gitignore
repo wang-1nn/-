@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+/src/main/java/org/example/backend/config/
+/src/main/java/org/example/backend/controller/
+/src/main/java/org/example/backend/entity/
+/src/main/java/org/example/backend/filter/
+/src/main/java/org/example/backend/mapper/
+/src/main/java/org/example/backend/service/
+/src/main/java/org/example/backend/util/

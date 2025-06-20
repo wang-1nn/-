@@ -29,4 +29,6 @@ public interface UserMapper {
 
     @Update("update users set last_login = #{lastLogin} where username = #{username}")
     int updateLastLogin(String username, Date lastLogin);
+
+
 }

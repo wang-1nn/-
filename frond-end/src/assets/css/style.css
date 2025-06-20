@@ -1,0 +1,318 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* EduBrain 主题样式 */
+
+/* 布局容器 */
+.app-layout {
+  @apply min-h-screen flex flex-col;
+}
+
+.main-content {
+  @apply flex-grow p-6 bg-gray-50;
+}
+
+/* 布局响应式适配 */
+@media (max-width: 768px) {
+  .main-content {
+    @apply p-4;
+  }
+}
+
+/* 导航栏样式 */
+.navbar {
+  @apply flex items-center justify-between bg-white shadow-sm px-4 py-2 sticky top-0 z-50;
+}
+
+.logo-container {
+  @apply flex items-center space-x-2;
+}
+
+.logo {
+  @apply text-xl font-bold text-indigo-600;
+}
+
+/* 侧边栏样式 */
+.sidebar {
+  @apply bg-white shadow-sm w-64 flex-shrink-0 h-screen sticky top-0 transition-all duration-300 ease-in-out;
+}
+
+.sidebar-collapsed {
+  @apply w-20;
+}
+
+.sidebar-header {
+  @apply flex items-center justify-between p-4 border-b border-gray-100;
+}
+
+.sidebar-menu {
+  @apply p-3 space-y-1;
+}
+
+.sidebar-menu-item {
+  @apply flex items-center space-x-3 px-3 py-2 rounded-md text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors duration-200;
+}
+
+.sidebar-menu-item.active {
+  @apply bg-indigo-50 text-indigo-700;
+}
+
+.sidebar-menu-icon {
+  @apply text-lg;
+}
+
+/* 页面头部 */
+.page-header {
+  @apply mb-6;
+}
+
+.page-title {
+  @apply text-2xl font-bold text-gray-800;
+}
+
+.page-subtitle {
+  @apply text-gray-500 mt-1;
+}
+
+/* 卡片变体 */
+.stat-card {
+  @apply bg-white rounded-lg shadow-md border border-gray-100 flex items-center justify-between p-6;
+}
+
+.stat-card-value {
+  @apply text-3xl font-bold text-gray-900;
+}
+
+.stat-card-label {
+  @apply text-sm text-gray-500;
+}
+
+.stat-card-icon {
+  @apply text-3xl text-indigo-400;
+}
+
+/* 仪表盘组件 */
+.dashboard-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6;
+}
+
+.dashboard-charts {
+  @apply grid grid-cols-1 lg:grid-cols-2 gap-6;
+}
+
+.chart-container {
+  @apply bg-white rounded-lg shadow-md border border-gray-100 p-5 h-80;
+}
+
+/* 内容区变体 */
+.content-section {
+  @apply bg-white rounded-lg shadow-sm p-6 mb-6;
+}
+
+.content-header {
+  @apply flex items-center justify-between mb-4 pb-4 border-b border-gray-100;
+}
+
+.content-title {
+  @apply text-xl font-bold text-gray-800;
+}
+
+/* 表格增强 */
+.data-table {
+  @apply w-full;
+}
+
+.data-table th {
+  @apply px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+}
+
+.data-table td {
+  @apply px-4 py-3 whitespace-nowrap text-sm text-gray-500;
+}
+
+.data-table tr {
+  @apply border-b border-gray-100 hover:bg-gray-50 transition-colors duration-150;
+}
+
+/* 列表样式 */
+.item-list {
+  @apply divide-y divide-gray-100;
+}
+
+.list-item {
+  @apply py-4 flex items-center space-x-4;
+}
+
+.list-item-content {
+  @apply flex-grow;
+}
+
+.list-item-title {
+  @apply text-sm font-medium text-gray-900;
+}
+
+.list-item-subtitle {
+  @apply text-sm text-gray-500;
+}
+
+/* 特色动画 */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* 加载动画 */
+.loader {
+  @apply w-6 h-6 border-2 border-gray-200 border-t-indigo-600 rounded-full animate-spin;
+}
+
+.loader-lg {
+  @apply w-10 h-10 border-4;
+}
+
+/* 智能教育特色样式 */
+.ai-assistant-container {
+  @apply bg-gradient-to-br from-indigo-50 to-blue-50 p-6 rounded-lg shadow-sm;
+}
+
+.chat-container {
+  @apply bg-white rounded-lg shadow-sm overflow-hidden flex flex-col h-[500px];
+}
+
+.chat-messages {
+  @apply flex-grow p-4 overflow-y-auto space-y-4;
+}
+
+.chat-message {
+  @apply p-3 rounded-lg max-w-[80%];
+}
+
+.chat-message-user {
+  @apply p-3 rounded-lg max-w-[80%] bg-indigo-100 text-gray-800 ml-auto;
+}
+
+.chat-message-bot {
+  @apply p-3 rounded-lg max-w-[80%] bg-gray-100 text-gray-800;
+}
+
+.chat-input {
+  @apply p-4 border-t border-gray-100 flex items-center space-x-3;
+}
+
+/* 响应式工具类 */
+.hide-on-mobile {
+  @apply hidden md:block;
+}
+
+.show-on-mobile {
+  @apply block md:hidden;
+}
+
+/* 过渡效果 */
+.transition-height {
+  transition: height 0.3s ease-in-out;
+}
+
+.transition-width {
+  transition: width 0.3s ease-in-out;
+}
+
+/* 特殊元素 */
+.floating-action-button {
+  @apply fixed bottom-6 right-6 w-14 h-14 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg hover:bg-indigo-700 transition-colors;
+}
+
+/* 教学资源相关 */
+.resource-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6;
+}
+
+.resource-card {
+  @apply bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-100 flex flex-col overflow-hidden;
+}
+
+.resource-thumbnail {
+  @apply h-40 bg-gray-100 flex items-center justify-center overflow-hidden;
+}
+
+.resource-content {
+  @apply p-4 flex-grow;
+}
+
+.resource-footer {
+  @apply p-4 border-t border-gray-100 flex items-center justify-between;
+}
+
+/* 知识点展示 */
+.knowledge-tag {
+  @apply inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20 mr-2 mb-2;
+}
+
+/* 考试相关 */
+.question-card {
+  @apply bg-white rounded-lg shadow-md border border-gray-100 mb-4;
+}
+
+.question-header {
+  @apply flex justify-between items-center mb-3;
+}
+
+.question-number {
+  @apply text-lg font-semibold text-gray-700;
+}
+
+.question-type {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-sky-100 text-sky-800;
+}
+
+.question-content {
+  @apply mb-4;
+}
+
+.answer-options {
+  @apply space-y-2;
+}
+
+.answer-option {
+  @apply flex items-start p-3 border border-gray-200 rounded-md hover:border-indigo-300 transition-colors;
+}
+
+.answer-option.selected {
+  @apply border-indigo-500 bg-indigo-50;
+}
+
+/* 学习进度展示 */
+.progress-container {
+  @apply h-2 bg-gray-200 rounded-full overflow-hidden;
+}
+
+.progress-bar {
+  @apply h-full bg-indigo-600 transition-all duration-300;
+}
+
+.progress-percentage {
+  @apply text-sm text-gray-600 mt-1;
+}
+
+/* 错题本 */
+.mistake-item {
+  @apply p-4 border-l-4 border-red-500 bg-red-50 rounded-r-lg mb-4;
+}
+
+.correct-item {
+  @apply p-4 border-l-4 border-green-500 bg-green-50 rounded-r-lg mb-4;
+}

@@ -1,7 +1,8 @@
 package org.example.backend.mapper;
 
 import org.apache.ibatis.annotations.*;
-import org.example.backend.entity.User;
+
+import org.example.backend.entity.pojo.User;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Date;
@@ -11,7 +12,7 @@ public interface UserMapper {
 
 
     @Select("select * from users where username = #{username} and password = #{password}")
-    User login(String username,String password);
+    User login(String username, String password);
 
 
     @Options(useGeneratedKeys = true, keyProperty = "userId", keyColumn = "user_id")
@@ -30,5 +31,10 @@ public interface UserMapper {
     @Update("update users set last_login = #{lastLogin} where username = #{username}")
     int updateLastLogin(String username, Date lastLogin);
 
+    @Select("SELECT * FROM users WHERE username = #{text} or email = #{text}")
+    User findUserByUsernameOrEmail(String text);
+
+    @Select("SELECT real_name FROM users WHERE user_id = #{userId}")
+    String findRealNameById(Long userId);
 
 }

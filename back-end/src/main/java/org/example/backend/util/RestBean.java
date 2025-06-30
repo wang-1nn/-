@@ -53,6 +53,10 @@ public class RestBean<T> {
         this.data = data;
     }
 
+    public static <T> RestBean<T> success(T data) {
+        return new RestBean<>(200, true, "请求成功", data);
+    }
+
     public static <T> RestBean<T> success(String message) {
         return new RestBean<>(200, true, message ,null);
     }

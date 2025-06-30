@@ -1,5 +1,6 @@
 package org.example.backend.service;
 
+import io.modelcontextprotocol.client.McpSyncClient;
 import jakarta.annotation.PostConstruct;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -15,10 +16,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
+import java.util.List;
+
 @Service
 public class AiChatservice {
     @Autowired
     OpenAiChatModel chatModel;          // 已由 Starter 创建
+
+    @Autowired
+    List<McpSyncClient> mcpSyncClients;
 
     @Autowired
     VectorStore vectorStore;
@@ -43,7 +49,7 @@ public class AiChatservice {
                 .defaultSystem("你是一个自定义的rag应用请始终保持用中文回答问")
                 .build();
     }
-    public Flux<String> chat(String message, String conversationId){
+    public Flux<String> teacherChat(String message, String conversationId){
 //        init();
 
         /* ---------- PromptTemplate ---------- */
@@ -74,7 +80,7 @@ public class AiChatservice {
 
         /* ---------- 调用 ---------- */
             return chatClient.prompt()
-                    .user(message)
+                    .user("你是一个教师的助手，专注于帮助教师解决在教学中的各类问题，请根据教师的问题需求帮忙解答，在回答时调用bingcnmcp工具进行搜索，以下为问题需求："+message)
                     .advisors(a -> a
                 .param(ChatMemory.CONVERSATION_ID, conversationId)
                 .advisors(qa))          // 将 QA 顾问加入当前调用

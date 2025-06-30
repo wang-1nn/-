@@ -1,7 +1,7 @@
 package org.example.backend.service.impl;
 
 import jakarta.annotation.Resource;
-import org.example.backend.entity.User;
+import org.example.backend.entity.pojo.User;
 import org.example.backend.mapper.UserMapper;
 import org.example.backend.service.UserService;
 import org.springframework.stereotype.Service;

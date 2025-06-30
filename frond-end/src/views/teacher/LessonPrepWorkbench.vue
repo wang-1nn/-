@@ -1,402 +1,284 @@
 <template>
-  <div class="flex h-screen bg-gray-50 font-sans">
-    <!-- 左侧边栏：大纲导入与展示 -->
-    <aside class="w-1/4 h-full bg-white border-r border-gray-200 flex flex-col">
-      <div class="p-4 border-b border-gray-200">
-        <h2 class="text-lg font-semibold text-gray-800">课程大纲</h2>
-      </div>
-      
-      <div class="flex-grow p-4 overflow-y-auto">
-        <!-- 上传组件 -->
-        <div v-if="!outline" class="h-full flex flex-col items-center justify-center text-center">
-          <div 
-            class="w-full border-2 border-dashed border-gray-300 rounded-xl p-8 hover:border-blue-500 hover:bg-blue-50 transition-all cursor-pointer"
-            @click="triggerFileInput"
-            @dragover.prevent="isDragging = true"
-            @dragleave.prevent="isDragging = false"
-            @drop.prevent="handleFileDrop"
-            :class="{ 'border-blue-500 bg-blue-50 scale-105': isDragging }"
-          >
-            <input ref="fileInput" type="file" class="hidden" @change="handleFileChange" accept=".pdf,.doc,.docx" />
-            <div v-if="!isUploading">
-              <div v-if="!file">
-                <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l-3.75 3.75M12 9.75l3.75 3.75M3 17.25V6.75A2.25 2.25 0 015.25 4.5h13.5A2.25 2.25 0 0121 6.75v10.5A2.25 2.25 0 0118.75 19.5H5.25A2.25 2.25 0 013 17.25z" />
-                </svg>
-                <p class="mt-2 font-semibold text-blue-600">选择文件</p>
-                <p class="text-sm text-gray-500">或拖拽到此处</p>
-              </div>
-              <div v-else class="text-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p class="mt-2 font-semibold text-gray-700">{{ file.name }}</p>
-                <p class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</p>
-              </div>
-            </div>
-            <div v-if="isUploading" class="flex flex-col items-center justify-center">
-              <svg class="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <p class="mt-2 text-sm font-semibold text-gray-600">正在解析大纲...</p>
-            </div>
-          </div>
-          <button v-if="file && !isUploading" @click.stop="uploadFile" class="mt-6 w-full bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg focus:ring-4 focus:ring-blue-300">
-            开始解析
-          </button>
-        </div>
+  <div class="flex flex-col h-full bg-slate-50 dark:bg-slate-900">
+    <!-- Part of ModelStatusToast.vue -->
+    <div class="fixed top-0 left-0 right-0 z-50 p-2 text-center text-white bg-green-600 shadow-lg" v-if="toastVisible">
+      <p class="text-sm">
+        <span class="font-bold">模型状态:</span> {{ modelName }} |
+        <span class="font-bold">队列:</span> {{ queueLength }} |
+        <span class="font-bold">GPU:</span> {{ gpuTemp }}°C
+      </p>
+    </div>
 
-        <!-- 大纲树状图 -->
-        <div v-else>
-          <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <h3 class="font-semibold text-base text-blue-800">{{ outline.courseInfo.name }}</h3>
-            <p class="text-sm text-blue-600">{{ outline.courseInfo.subject }} - {{ outline.courseInfo.grade }}</p>
-          </div>
-          <ul class="space-y-1">
-            <li v-for="item in outline.outline" :key="item.title">
-              <div class="flex items-start p-2 rounded-lg hover:bg-gray-100">
-                <input type="checkbox" :id="item.title" :value="item" v-model="selectedNodes" class="mt-1 mr-3 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer">
-                <label :for="item.title" class="text-sm font-medium text-gray-800 cursor-pointer">{{ item.title }}</label>
-              </div>
-              <ul v-if="item.children && item.children.length" class="pl-8 mt-1 space-y-1 border-l-2 border-gray-200 ml-2">
-                <li v-for="child in item.children" :key="child.title">
-                   <div class="flex items-start p-1.5 rounded-md hover:bg-gray-100">
-                    <input type="checkbox" :id="child.title" :value="child" v-model="selectedNodes" class="mt-1 mr-3 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer">
-                    <label :for="child.title" class="text-sm text-gray-600 cursor-pointer">{{ child.title }}</label>
-                  </div>
-                </li>
-              </ul>
-            </li>
-          </ul>
-        </div>
-      </div>
-       <div class="p-4 border-t border-gray-200">
-          <button v-if="outline" @click="resetForm" class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition text-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block -mt-0.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5" /><path stroke-linecap="round" stroke-linejoin="round" d="M4 9a9 9 0 0114.65-5.24L20 5M4 15a9 9 0 0014.65 5.24L20 19" /></svg>
-              更换大纲
-          </button>
-      </div>
-    </aside>
-
-    <!-- 中间主面板：提示词编辑器 -->
-    <main class="w-1/2 h-full flex flex-col bg-gray-50">
-        <div class="flex-none flex justify-between items-center p-4">
-            <h2 class="text-lg font-semibold text-gray-800">Prompt 编辑器</h2>
-            <div class="flex items-center space-x-3">
-                <el-select v-model="selectedTemplate" placeholder="选择模板" size="default">
-                    <el-option v-for="item in templateOptions" :key="item.value" :label="item.label" :value="item.value" />
-                </el-select>
-                <button @click="startGeneration" :disabled="isGenerating || !outline" class="px-5 py-2.5 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg hover:from-green-600 hover:to-teal-600 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all font-semibold flex items-center shadow-md hover:shadow-lg focus:ring-4 focus:ring-green-300">
-                    <svg v-if="isGenerating" class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 -ml-1 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
-                    {{ isGenerating ? '生成中...' : '开始生成' }}
-                </button>
-            </div>
-        </div>
-        <div class="flex-grow p-4 pt-0">
-          <div ref="editorContainer" class="w-full h-full border rounded-xl shadow-sm"></div>
-        </div>
-    </main>
-
-    <!-- 右侧边栏：生成结果 -->
-    <aside class="w-1/4 h-full bg-white border-l border-gray-200 flex flex-col">
-        <div class="flex-none flex justify-between items-center p-4 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-800">生成结果</h2>
-            <div class="flex space-x-3">
-                <button @click="copyResult" class="text-gray-500 hover:text-blue-600 transition-colors" title="复制Markdown">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                </button>
-                <button @click="exportResult" class="text-gray-500 hover:text-green-600 transition-colors" title="导出为文件">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                </button>
-            </div>
-        </div>
-        
-        <div class="flex-grow overflow-y-auto">
-            <div v-if="isGenerating || generatedContent" ref="resultContainer" class="prose prose-sm max-w-none p-4" v-html="renderedMarkdown"></div>
-            <!-- Empty State -->
-            <div v-else class="h-full flex flex-col items-center justify-center text-center text-gray-500 p-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.898 20.572L16.5 21.75l-.398-1.178a3.375 3.375 0 00-2.456-2.456L12.5 18l1.178-.398a3.375 3.375 0 002.456-2.456L16.5 14.25l.398 1.178a3.375 3.375 0 002.456 2.456L20.5 18l-1.178.398a3.375 3.375 0 00-2.424 2.424z" /></svg>
-                <h3 class="mt-4 text-sm font-semibold text-gray-800">准备就绪</h3>
-                <p class="mt-1 text-xs text-gray-500">在左侧选择大纲节点，编辑Prompt后<br>点击"开始生成"即可在此处预览结果。</p>
-            </div>
-             <!-- Skeleton Loader -->
-            <div v-if="isGenerating && !generatedContent" class="p-4 space-y-4">
-                <div class="animate-pulse flex space-x-4">
-                    <div class="flex-1 space-y-3 py-1">
-                        <div class="h-2 bg-slate-200 rounded"></div>
-                        <div class="space-y-2">
-                            <div class="grid grid-cols-3 gap-4">
-                                <div class="h-2 bg-slate-200 rounded col-span-2"></div>
-                                <div class="h-2 bg-slate-200 rounded col-span-1"></div>
-                            </div>
-                            <div class="h-2 bg-slate-200 rounded"></div>
-                        </div>
-                    </div>
+    <Splitpanes class="flex-1 default-theme" :push-other-panes="false" style="padding-top: 40px;">
+      <!-- === Left Pane: OutlineImport === -->
+      <Pane min-size="20" size="25" class="flex flex-col bg-white dark:bg-slate-800">
+        <div class="flex flex-col h-full p-4 border-r border-slate-200 dark:border-slate-700">
+          <h3 class="mb-4 text-lg font-semibold text-slate-800 dark:text-slate-200">教学大纲</h3>
+          <div class="mb-4">
+            <el-upload drag action="#" :http-request="() => {}" :before-upload="handleBeforeUpload" :show-file-list="false" class="w-full">
+              <div class="p-4 text-center">
+                <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+                <div class="el-upload__text">
+                  拖拽文件到此处或 <em>点击上传</em>
+                  <div class="el-upload__tip" style="margin-top: 8px;">支持 PDF, DOCX 文件</div>
                 </div>
-                <div class="h-2 bg-slate-200 rounded"></div>
-                <div class="h-2 bg-slate-200 rounded w-5/6"></div>
-                <div class="h-2 bg-slate-200 rounded w-3/4"></div>
+              </div>
+            </el-upload>
+          </div>
+          <div v-if="isParsing" class="flex flex-col items-center justify-center p-4 mb-4 rounded-md bg-slate-100 dark:bg-slate-700">
+            <el-progress type="circle" :percentage="parsingProgress" class="mb-2" />
+            <p class="text-sm text-slate-600 dark:text-slate-300">正在解析大纲...</p>
+          </div>
+          <div class="flex-1 overflow-y-auto">
+            <el-tree v-if="!isParsing && outlineData.length" :data="outlineData" :props="{ children: 'children', label: 'label' }" @node-click="handleNodeClick" default-expand-all highlight-current class="bg-transparent" />
+            <div v-else-if="!isParsing && !outlineData.length" class="flex items-center justify-center h-full">
+              <p class="text-slate-500">上传文件后，此处将显示大纲结构。</p>
             </div>
+          </div>
         </div>
-    </aside>
+      </Pane>
+
+      <!-- === Middle Pane: Editor === -->
+      <Pane min-size="40">
+        <div class="flex flex-col h-full bg-white dark:bg-gray-800">
+          <!-- Part of Toolbar.vue -->
+          <div class="flex items-center justify-between p-2 border-b bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+            <div class="flex items-center gap-4">
+              <label for="template-selector" class="text-sm font-medium text-slate-700 dark:text-slate-300">模板:</label>
+              <select v-model="selectedTemplate" class="block w-48 px-3 py-1 text-sm bg-white border rounded-md shadow-sm border-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                <option v-for="template in templates" :key="template.id" :value="template.id">{{ template.name }}</option>
+              </select>
+            </div>
+            <button @click="handleGenerate" class="inline-flex items-center px-6 py-2 text-sm font-semibold text-white transition-colors rounded-lg shadow-md bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 00-1 1v.5a1.5 1.5 0 01-3 0V16a1 1 0 00-1-1H6a1 1 0 01-1-1v-3a1 1 0 011-1h.5a1.5 1.5 0 000-3H6a1 1 0 01-1-1V5a1 1 0 011-1h3a1 1 0 001-1v-.5z" /></svg>
+              生成教案
+            </button>
+          </div>
+          <!-- Part of PromptEditor.vue -->
+          <div ref="editorRef" class="relative flex-1 w-full h-full"></div>
+        </div>
+      </Pane>
+
+      <!-- === Right Pane: StreamOutput === -->
+      <Pane min-size="20" size="35" class="flex flex-col">
+        <div class="flex flex-col h-full p-4 bg-white dark:bg-slate-800">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200 dark:border-slate-700">
+            <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200">生成结果</h3>
+            <div>
+              <button @click="handleCopy" title="复制" class="p-1 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg></button>
+              <button @click="handleStopStream" title="停止生成" class="p-1 text-slate-500 hover:text-red-600 dark:hover:text-red-400"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10h6v6H9z" /></svg></button>
+            </div>
+          </div>
+          <div ref="outputContainer" class="flex-1 overflow-y-auto prose max-w-none dark:prose-invert">
+            <p v-if="!isStreaming && !streamingText">点击"生成教案"开始。</p>
+            <div v-html="formattedText"></div>
+            <div v-if="isStreaming" class="flex items-center"><span class="typing-cursor"></span><span class="ml-2 text-sm text-slate-500">正在输入...</span></div>
+          </div>
+        </div>
+      </Pane>
+    </Splitpanes>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch, nextTick } from 'vue';
-import { ElMessage, ElSelect, ElOption } from 'element-plus';
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
+import { Splitpanes, Pane } from 'splitpanes';
+import 'splitpanes/dist/splitpanes.css';
+import { ElUpload, ElIcon, ElTree, ElProgress } from 'element-plus';
+import { UploadFilled } from '@element-plus/icons-vue';
 import * as monaco from 'monaco-editor';
 import { marked } from 'marked';
-import DOMPurify from 'dompurify';
 
-// Monaco Editor
-const editorContainer = ref(null);
-let editorInstance = null;
-const editorContent = ref('');
+// --- State from ModelStatusToast ---
+const modelName = ref('gemma-7b-it');
+const queueLength = ref(2);
+const gpuTemp = ref(68);
+const toastVisible = ref(true);
 
-// Result Display
-const resultContainer = ref(null);
-const generatedContent = ref('');
-const renderedMarkdown = computed(() => {
-    if (isGenerating.value && !generatedContent.value) return ''; // Don't render anything if loading skeleton is shown
-    const rawHtml = marked.parse(generatedContent.value);
-    return DOMPurify.sanitize(rawHtml);
-});
+// --- State from OutlineImport ---
+const isParsing = ref(false);
+const parsingProgress = ref(0);
+const outlineData = ref([]);
+const prompt = ref(''); // Shared state, moved from main component
 
-// File Upload
-const fileInput = ref(null);
-const file = ref(null);
-const isDragging = ref(false);
-const isUploading = ref(false);
-
-// Outline Data
-const outline = ref(null);
-const selectedNodes = ref([]);
-
-// Generation State
-const isGenerating = ref(false);
-
-// Templates
-const templateOptions = ref([
-  { label: '标准教案模板', value: 'standard' },
-  { label: '项目式学习模板', value: 'pbl' },
-  { label: '翻转课堂模板', value: 'flipped' },
+// --- State from Toolbar ---
+const templates = ref([
+  { id: 'standard', name: '标准教学教案' },
+  { id: 'pbl', name: '项目式学习 (PBL)' },
+  { id: 'flipped', name: '翻转课堂' },
 ]);
 const selectedTemplate = ref('standard');
 
-const standardTemplate = `---
-title: "课程教案：{{courseName}}"
-subject: "{{subject}}"
-grade: "{{grade}}"
-duration: "90分钟"
----
+// --- State from PromptEditor ---
+const editorRef = ref(null);
+let editor = null;
+const isDark = ref(document.documentElement.classList.contains('dark'));
 
-# 1. 教学目标
-- 知识与技能：
-- 过程与方法：
-- 情感态度与价值观：
+// --- State from StreamOutput ---
+const streamingText = ref('');
+const isStreaming = ref(false);
+let streamInterval = null;
+const outputContainer = ref(null);
+const formattedText = computed(() => marked(streamingText.value));
 
-# 2. 教学重难点
-- 重点：
-- 难点：
-
-# 3. 教学准备
-- 教师准备：
-- 学生准备：
-
-# 4. 教学过程
-{{nodes}}
-
-# 5. 板书设计
-
-# 6. 课后反思
-`;
+// --- Logic & Methods ---
 
 onMounted(() => {
-  if (editorContainer.value) {
-    editorInstance = monaco.editor.create(editorContainer.value, {
-      value: "请先从左侧上传并解析课程大纲。",
+  // ModelStatusToast logic
+  setTimeout(() => { toastVisible.value = false; }, 5000);
+
+  // PromptEditor logic
+  if (editorRef.value) {
+    editor = monaco.editor.create(editorRef.value, {
+      value: prompt.value,
       language: 'markdown',
-      theme: 'vs',
-      automaticLayout: true,
+      theme: isDark.value ? 'vs-dark' : 'vs',
       wordWrap: 'on',
-      fontSize: 14,
-      lineNumbers: 'off',
-      glyphMargin: false,
-      folding: false,
-      lineDecorationsWidth: 0,
-      lineNumbersMinChars: 0,
       minimap: { enabled: false },
-      padding: { top: 15, bottom: 15 },
+      automaticLayout: true,
+      fontSize: 14,
       scrollBeyondLastLine: false,
+      padding: { top: 16, bottom: 16 },
+      lineNumbers: 'off',
     });
-    editorInstance.onDidChangeModelContent(() => {
-      editorContent.value = editorInstance.getValue();
+    editor.onDidChangeModelContent(() => {
+      prompt.value = editor.getValue();
     });
   }
 });
 
-watch([selectedNodes, selectedTemplate], () => {
-    updateEditorWithTemplate();
-}, { deep: true });
+onUnmounted(() => {
+  editor?.dispose();
+  clearInterval(streamInterval);
+});
 
-function updateEditorWithTemplate() {
-    if (!outline.value) return;
+// Method from PromptEditor to insert text
+const insertInEditor = (text) => {
+  if (!editor) return;
+  const selection = editor.getSelection();
+  const op = { range: selection, text: text, forceMoveMarkers: true };
+  editor.executeEdits('insert-text', [op]);
+  editor.focus();
+};
 
-    let template = standardTemplate; // Add logic for more templates later
-    
-    let finalContent = template
-        .replace('{{courseName}}', outline.value.courseInfo.name || '未命名课程')
-        .replace('{{subject}}', outline.value.courseInfo.subject || '待定')
-        .replace('{{grade}}', outline.value.courseInfo.grade || '待定');
-    
-    const nodesContent = selectedNodes.value.length > 0 
-        ? selectedNodes.value.map(node => `## ${node.title}\n\n### 教学活动\n\n- \n\n### 设计意图\n\n- \n`).join('\n')
-        : '<!-- 请从左侧选择大纲节点以填充教学过程 -->';
-    
-    finalContent = finalContent.replace('{{nodes}}', nodesContent);
-
-    if (editorInstance) {
-        editorInstance.setValue(finalContent);
+// Method from OutlineImport
+const handleBeforeUpload = (file) => {
+  isParsing.value = true;
+  parsingProgress.value = 0;
+  const interval = setInterval(() => {
+    parsingProgress.value += 10;
+    if (parsingProgress.value >= 100) {
+      clearInterval(interval);
+      isParsing.value = false;
+      outlineData.value = [
+        { id: 1, label: '第一章：课程介绍', children: [{ id: 2, label: '1.1 什么是人工智能' }, { id: 3, label: '1.2 发展历史' }] },
+        { id: 4, label: '第二章：搜索算法', children: [{ id: 5, label: '2.1 深度优先搜索' }, { id: 6, label: '2.2 广度优先搜索' }] },
+      ];
     }
-}
+  }, 200);
+  return false;
+};
 
-
-function triggerFileInput() {
-  fileInput.value.click();
-}
-
-function handleFileChange(event) {
-  const files = event.target.files;
-  if (files.length > 0) {
-    file.value = files[0];
+const handleNodeClick = (data) => {
+  if (!data.children || data.children.length === 0) {
+    insertInEditor(`\n### ${data.label}\n`);
   }
-}
+};
 
-function handleFileDrop(event) {
-  isDragging.value = false;
-  const files = event.dataTransfer.files;
-  if (files.length > 0) {
-    file.value = files[0];
-  }
-}
+// Method from Toolbar/Main component
+const handleGenerate = () => {
+  startStream();
+};
 
-function formatFileSize(bytes) {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-function resetForm() {
-    file.value = null;
-    outline.value = null;
-    selectedNodes.value = [];
-    generatedContent.value = '';
-    if (editorInstance) editorInstance.setValue('请先从左侧上传并解析课程大纲。');
-}
-
-async function uploadFile() {
-  if (!file.value) return;
-  isUploading.value = true;
-  await new Promise(resolve => setTimeout(resolve, 1500));
-
-  outline.value = {
-    courseInfo: {
-      name: '高级编程技术',
-      grade: '大学二年级',
-      totalHours: 64,
-      subject: '计算机科学',
-    },
-    outline: [
-      {
-        title: '第一单元：算法基础',
-        children: [{ title: '1.1 复杂度分析' }, { title: '1.2 递归与分治' }],
-      },
-      {
-        title: '第二单元：数据结构',
-        children: [{ title: '2.1 树与二叉树' }, { title: '2.2 图的应用' }],
-      },
-    ],
-  };
-  
-  isUploading.value = false;
-  ElMessage.success('大纲解析成功！');
-  if (outline.value) {
-      selectedNodes.value = outline.value.outline.flatMap(o => [o, ...(o.children || [])]);
-  }
-}
-
-async function startGeneration() {
-    if (isGenerating.value || !outline.value || selectedNodes.value.length === 0) {
-        if(!outline.value) ElMessage.warning('请先导入课程大纲');
-        else if(selectedNodes.value.length === 0) ElMessage.warning('请至少选择一个大纲节点');
-        return;
+// Methods from StreamOutput
+const scrollToBottom = () => {
+  nextTick(() => {
+    if (outputContainer.value) {
+      outputContainer.value.scrollTop = outputContainer.value.scrollHeight;
     }
+  });
+};
 
-    isGenerating.value = true;
-    generatedContent.value = '';
-    
-    // Mock streaming generation
-    const fullText = `# ${outline.value.courseInfo.name} 教案\n\n${editorContent.value}`;
-    const words = fullText.split(/(\s+)/);
-    
-    await new Promise(resolve => setTimeout(resolve, 500)); // Initial delay for skeleton
-
-    for (let i = 0; i < words.length; i++) {
-        await new Promise(resolve => setTimeout(resolve, 30));
-        generatedContent.value += words[i];
-        await nextTick();
-        if(resultContainer.value) resultContainer.value.scrollTop = resultContainer.value.scrollHeight;
+const startStream = () => {
+  isStreaming.value = true;
+  streamingText.value = '';
+  const fullResponse = `### 智能教学设计：第一章 课程介绍\n\n**教学目标:**\n1.  **知识与技能:** 学生能够清晰定义"人工智能"，并列举至少三个应用实例。\n2.  **过程与方法:** 通过小组讨论，培养学生归纳总结和口头表达能力。\n3.  **情感态度价值观:** 激发学生对前沿科技的兴趣，树立科学探索精神。\n\n**教学重点:** 人工智能的核心概念。\n**教学难点:** 理解"智能"的多维度含义。`;
+  let i = 0;
+  streamInterval = setInterval(() => {
+    if (i < fullResponse.length) {
+      streamingText.value += fullResponse[i];
+      i++;
+      scrollToBottom();
+    } else {
+      handleStopStream();
     }
+  }, 20);
+};
 
-    isGenerating.value = false;
-    ElMessage.success('教案生成完毕！');
-}
+const handleStopStream = () => {
+  isStreaming.value = false;
+  clearInterval(streamInterval);
+};
 
-function copyResult() {
-    if(!generatedContent.value) return ElMessage.info('没有内容可以复制');
-    navigator.clipboard.writeText(generatedContent.value);
-    ElMessage.success('已复制到剪贴板！');
-}
-
-function exportResult() {
-    if(!generatedContent.value) return ElMessage.info('没有内容可以导出');
-    const blob = new Blob([generatedContent.value], { type: 'text/markdown;charset=utf-8' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `${outline.value.courseInfo.name || '教案'}.md`;
-    link.click();
-    URL.revokeObjectURL(link.href);
-    ElMessage.success('Markdown文件已开始下载');
-}
+const handleCopy = () => {
+  navigator.clipboard.writeText(streamingText.value);
+};
 </script>
 
 <style>
-.prose h1, .prose h2, .prose h3 {
-  font-weight: 600;
+/* --- General Styles for Splitpanes --- */
+.splitpanes.default-theme .splitpanes__pane { background-color: transparent; }
+.splitpanes.default-theme .splitpanes__splitter {
+  background-color: #f1f5f9; /* bg-slate-100 */
+  border-left: 1px solid #e2e8f0; /* border-slate-200 */
+  position: relative;
+  width: 8px;
+  z-index: 10;
 }
-.prose pre {
-    background-color: #f3f4f6; /* bg-gray-100 */
-    color: #1f2937; /* text-gray-800 */
-    padding: 1em;
-    border-radius: 0.5rem; /* rounded-lg */
-    overflow-x: auto;
+.dark .splitpanes.default-theme .splitpanes__splitter {
+  background-color: #1e293b; /* dark:bg-slate-800 */
+  border-left: 1px solid #334155; /* dark:border-slate-700 */
 }
-.prose code {
-    background-color: #e5e7eb; /* bg-gray-200 */
-    padding: 0.2em 0.4em;
-    margin: 0;
-    font-size: 85%;
-    border-radius: 0.25rem; /* rounded-md */
+.splitpanes.default-theme .splitpanes__splitter:hover { border-left: 1px solid #4f46e5; }
+.splitpanes.default-theme .splitpanes__splitter:before {
+  content: '';
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%,-50%);
+  width: 2px; height: 40px;
+  background-color: #cbd5e1; /* slate-300 */
+  border-radius: 5px;
+  transition: background-color 0.2s;
 }
-.prose blockquote {
-  border-left-color: #3b82f6; /* border-blue-500 */
+.dark .splitpanes.default-theme .splitpanes__splitter:before { background-color: #475569; }
+.splitpanes.default-theme .splitpanes__splitter:hover:before { background-color: #4f46e5; }
+
+/* --- Styles from OutlineImport --- */
+.el-tree { --el-tree-node-hover-bg-color: #f0f4ff; }
+.dark .el-tree {
+  --el-tree-text-color: #cbd5e1; /* slate-300 */
+  --el-tree-node-hover-bg-color: #334155; /* slate-700 */
+}
+.dark .el-tree-node__content:hover { background-color: var(--el-tree-node-hover-bg-color); }
+.dark .el-tree-node.is-current > .el-tree-node__content { background-color: #4f46e5; }
+.el-upload-dragger { width: 100% !important; }
+
+/* --- Styles from StreamOutput --- */
+.prose :where(pre):not(:where([class~="not-prose"] *)) {
+    background-color: #f3f4f6; color: #1f2937;
+    border-radius: 0.375rem; padding: 1em;
+}
+.dark .prose :where(pre):not(:where([class~="not-prose"] *)) {
+    background-color: #1f2937; color: #e5e7eb;
+}
+.typing-cursor {
+  display: inline-block;
+  width: 8px; height: 1.2em;
+  background-color: #4f46e5;
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink {
+  from, to { opacity: 1; }
+  50% { opacity: 0; }
 }
 </style> 

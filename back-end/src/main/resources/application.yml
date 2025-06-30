@@ -12,7 +12,16 @@ spring:
         index-name: custom-index
         embedding-dimension: 1536
         distance-type: cosine
-
+    mcp:
+      client:
+        enabled: true
+        name: my-mcp-client
+        version: 1.0.0
+        type: SYNC
+        request-timeout: 30s    #尝试链接时间
+        stdio:
+          root-change-notification: false
+          servers-configuration: classpath:/mcp-servers-config.json
     openai:
       api-key: sk-1F7AmEk8KXQfjoSF4axKMIbbz1JnL13LmcLqygbgn5yCSELl
       base-url: https://xiaoai.plus

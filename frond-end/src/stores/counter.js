@@ -1,45 +1,76 @@
-import { ref, computed } from 'vue'
-import { defineStore } from 'pinia'
+import {defineStore} from 'pinia'
 
+export const useCounterStore = defineStore('counter', {
+  state: () => {
+    return { count: 0 };
+  },
+  actions: {
+    increment() {
+      this.count++;
+    },
+  },
+});
+
+// 认证状态管理
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    isLoggedIn: false,
-    token: null, // 存储JWT token
-    user: null // 存储用户信息
-  }),
-  actions: {
-    initAuth() {
-      // 从 localStorage 中加载 token 和用户信息
-      const savedToken = localStorage.getItem('authToken');
-      const savedUser = localStorage.getItem('userInfo');
-
-      if (savedToken) {
-        this.token = savedToken;
-        this.isLoggedIn = true;
-        this.user = savedUser ? JSON.parse(savedUser) : null;
-      }
+    // 默认已登录状态，使用教师角色便于测试
+    isLoggedIn: true,
+    user: {
+      id: 1,
+      name: '张老师',
+      avatar: 'https://i.pravatar.cc/300',
+      email: 'teacher@example.com'
     },
-
-    login(user) {
-      // 假设这里是你获得的 token
-      const token = user.token; // 这里的 user 应该是包含 token 的对象
-      this.token = token;
-      this.user = user; // 存储用户信息
-      this.isLoggedIn = true;
-
-      // 将 token 和用户信息保存到 localStorage
-      localStorage.setItem('authToken', token);
-      localStorage.setItem('userInfo', JSON.stringify(user));
+    userRole: 'teacher',
+    token: 'mock-jwt-token'
+  }),
+  
+  actions: {
+    login(credentials) {
+      // 模拟登录请求
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          this.isLoggedIn = true
+          
+          // 根据用户名判断角色
+          if (credentials.username.includes('admin')) {
+            this.userRole = 'admin'
+            this.user = {
+              id: 3,
+              name: '管理员',
+              avatar: 'https://i.pravatar.cc/300?img=3',
+              email: 'admin@example.com'
+      }
+          } else if (credentials.username.includes('student')) {
+            this.userRole = 'student'
+            this.user = {
+              id: 2,
+              name: '李同学',
+              avatar: 'https://i.pravatar.cc/300?img=2',
+              email: 'student@example.com'
+            }
+          } else {
+            this.userRole = 'teacher'
+            this.user = {
+              id: 1,
+              name: '张老师',
+              avatar: 'https://i.pravatar.cc/300?img=1',
+              email: 'teacher@example.com'
+            }
+          }
+          
+          this.token = 'mock-jwt-token'
+          resolve({ success: true })
+        }, 1000)
+      })
     },
 
     logout() {
-      this.user = null;
-      this.token = null;
-      this.isLoggedIn = false;
-
-      // 清除 localStorage 中的用户信息
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('userInfo');
+      this.isLoggedIn = false
+      this.user = null
+      this.userRole = null
+      this.token = null
     }
   }
 });

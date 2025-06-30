@@ -4,6 +4,7 @@ export default {
     "./index.html",
     "./src/**/*.{vue,js,ts,jsx,tsx}",
   ],
+
   theme: {
     extend: {
       colors: {
@@ -114,8 +115,11 @@ export default {
       },
     },
   },
+
   plugins: [
     require('@tailwindcss/forms'),
+    require('@tailwindcss/typography'),
   ],
+
 }
 

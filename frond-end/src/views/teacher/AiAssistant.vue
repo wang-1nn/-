@@ -1,32 +1,17 @@
 <script setup>
-import {nextTick, onMounted, ref, watch} from 'vue';
+import {nextTick, onMounted, ref, watch, computed} from 'vue';
 import {ElMessage} from 'element-plus';
 import BaseCard from '@/components/common/BaseCard.vue';
 import {Bot, Menu, MessageSquare, Plus, Send, Trash2, User, X} from 'lucide-vue-next';
 import {marked} from 'marked';
 import DOMPurify from 'dompurify';
+import { post, get } from '@/net';
+
+// 用户ID，实际应用中应从登录状态或路由参数获取
+const userId = ref('1'); // 假设当前教师ID为1
 
 // 历史会话列表
-const conversationHistory = ref([
-  {
-    id: '1',
-    title: '教学设计方法',
-    createdAt: '2023-06-10',
-    preview: '如何设计一堂生动的课程？'
-  },
-  {
-    id: '2',
-    title: '班级管理技巧',
-    createdAt: '2023-06-12',
-    preview: '有哪些提高学生参与度的方法？'
-  },
-  {
-    id: '3',
-    title: '教学资源推荐',
-    createdAt: '2023-06-15',
-    preview: '请推荐一些教学资源'
-  }
-]);
+const conversationHistory = ref([]);
 
 // 当前会话
 const currentConversation = ref({
@@ -47,8 +32,25 @@ const inputTextarea = ref(null);
 // 是否正在加载回复
 const loading = ref(false);
 
+// 计算属性：检查当前会话中是否有空的助手消息
+const hasEmptyAssistantMessage = computed(() => {
+  return currentConversation.value.messages.some(message => 
+    message.role === 'assistant' && message.content === ''
+  );
+});
+
 // 是否显示历史对话侧边栏 (默认在移动端隐藏)
 const showSidebar = ref(window.innerWidth > 768);
+
+// 用户头像URL（可以是用户实际头像或默认头像）
+// 这里使用默认头像，实际应用中应从用户配置或服务器获取真实头像
+const userAvatarUrl = ref(null); 
+
+// 助手头像URL
+const assistantAvatarUrl = ref('/favicon.ico'); // 使用网站图标作为助手头像
+
+// 发送消息动画
+const messageSent = ref(false);
 
 // 自动调整文本域高度
 const adjustTextareaHeight = () => {
@@ -69,18 +71,78 @@ const renderMarkdown = (text) => {
   return DOMPurify.sanitize(rawHtml);
 };
 
-// 发送消息
-const sendMessage = async () => {
-  if (!userInput.value.trim()) return;
-  
-  // 添加用户消息到对话历史
-  currentConversation.value.messages.push({
-    role: 'user',
-    content: userInput.value,
-    time: new Date().toLocaleTimeString()
+// 从后端获取聊天历史
+const getChatHistory = () => {
+  get('/api/teacher/getChatHistory', 
+    { uid: userId.value },
+    (message, data) => {
+      if (data) {
+        processHistoryData(data);
+      }
+    },
+    (message) => {
+      console.error('获取聊天历史失败:', message);
+      ElMessage.error('获取聊天历史失败');
+    }
+  );
+};
+
+// 处理历史数据并转换为会话格式
+const processHistoryData = (historyData) => {
+  if (!historyData || historyData.length === 0) return;
+
+  // 按照conversationId对消息进行分组
+  const conversations = {};
+  historyData.forEach(item => {
+    if (!conversations[item.conversationId]) {
+      conversations[item.conversationId] = {
+        id: item.conversationId,
+        title: '历史对话',
+        createdAt: new Date(item.timestamp).toLocaleDateString(),
+        messages: []
+      };
+    }
+    
+    conversations[item.conversationId].messages.push({
+      role: item.type.toLowerCase(), // 转换为小写(USER -> user, ASSISTANT -> assistant)
+      content: item.content,
+      time: new Date(item.timestamp).toLocaleTimeString()
+    });
   });
   
-  // 清空输入框
+  // 将分组后的会话转换为数组
+  const historyList = Object.values(conversations);
+  
+  // 为每个会话设置标题和预览内容
+  historyList.forEach(conv => {
+    // 查找第一条用户消息作为标题和预览
+    const firstUserMessage = conv.messages.find(msg => msg.role === 'user');
+    if (firstUserMessage) {
+      conv.title = firstUserMessage.content.length > 20 ? 
+                  firstUserMessage.content.substring(0, 20) + '...' : 
+                  firstUserMessage.content;
+      conv.preview = firstUserMessage.content;
+    }
+  });
+  
+  // 按时间倒序排列
+  historyList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  
+  // 更新历史会话列表
+  conversationHistory.value = historyList;
+};
+
+// 发送消息
+const sendMessage = () => {
+  if (!userInput.value.trim()) return;
+  
+  // 触发发送动画效果
+  messageSent.value = true;
+  setTimeout(() => {
+    messageSent.value = false;
+  }, 300);
+  
+  // 保存用户输入并清空输入框
   const userQuestion = userInput.value;
   userInput.value = '';
   
@@ -89,34 +151,97 @@ const sendMessage = async () => {
     inputTextarea.value.style.height = 'auto';
   }
   
-  // 显示加载状态
+  // 添加用户消息到对话历史
+  currentConversation.value.messages.push({
+    role: 'user',
+    content: userQuestion,
+    time: new Date().toLocaleTimeString()
+  });
+  
+  // 显示加载状态，使用思考中指示器
   loading.value = true;
   
-  try {
-    // 模拟API请求延迟
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // 根据问题生成回答
-    let response = '';
-    
-    if (userQuestion.includes('课程') || userQuestion.includes('教学')) {
-      response = '设计生动的课程可以考虑以下几点：\n\n**1. 明确学习目标**\n设定清晰、具体、可衡量的学习目标，让学生知道他们将要学习什么。\n\n**2. 增加互动环节**\n设计问答、小组讨论、角色扮演等互动活动，提高学生参与度。\n\n**3. 使用多样化的教学媒体**\n结合视频、图片、音频等多媒体资源，丰富教学内容。\n\n**4. 设计情景化的教学案例**\n将知识点融入真实场景，增强学习的关联性和应用性。\n\n**5. 适当加入小组讨论和合作学习**\n培养学生的团队协作能力和批判性思维。';
-    } else if (userQuestion.includes('学生') || userQuestion.includes('管理')) {
-      response = '提高学生参与度的方法包括：\n\n**1. 设计开放性问题**\n提出没有标准答案的问题，鼓励学生思考和表达。\n\n**2. 使用小组合作学习**\n将学生分组完成任务，促进相互学习和支持。\n\n**3. 采用游戏化教学**\n引入竞赛、积分、徽章等游戏元素，增加学习乐趣。\n\n**4. 建立积分奖励机制**\n对积极参与的学生给予适当的奖励和肯定。\n\n**5. 创设真实的问题情境**\n提供与实际生活相关的问题，增强学习动机。';
-    } else if (userQuestion.includes('资源') || userQuestion.includes('材料')) {
-      response = '您可以在以下平台获取优质教学资源：\n\n**1. [国家教育资源公共服务平台](https://www.eduyun.cn/)**\n提供各学科教学资源和教育应用。\n\n**2. [学科网](https://www.zxxk.com/)**\n丰富的教案、课件、试题资源。\n\n**3. [教师教育网](https://www.teacherln.com/)**\n教师专业发展和教学研究资源。\n\n**4. [智慧教育平台](https://www.smartedu.cn/)**\n数字化教学工具和资源整合平台。\n\n**5. 各大出版社教育资源网站**\n如人教社、北师大出版社等提供的配套资源。';
-    } else {
-      response = '感谢您的提问！这是一个很好的问题。建议您可以：\n\n**1. 参考相关教育理论**\n了解布鲁姆分类法、建构主义等教育理论，指导教学实践。\n\n**2. 结合学生特点进行分析**\n考虑学生的认知水平、学习风格和兴趣爱好。\n\n**3. 尝试多样化的教学方法**\n如翻转课堂、项目式学习、探究式学习等。\n\n**4. 与同行交流经验**\n参加教研活动，分享和学习优秀教学经验。\n\n**5. 持续反思和改进**\n定期评估教学效果，不断调整和优化教学策略。';
+  // 滚动到底部以显示用户的消息
+  scrollToBottom();
+
+  // 使用原生fetch处理SSE响应
+  fetch(`/api/teacher/chat?message=${encodeURIComponent(userQuestion)}&uid=${encodeURIComponent(userId.value)}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({})
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    // 添加助手回复到对话历史
-    currentConversation.value.messages.push({
-      role: 'assistant',
-      content: response,
-      time: new Date().toLocaleTimeString()
-    });
-
-    // 如果是新会话，创建新的会话记录
+    // 标记是否已经添加了助手消息
+    let messageAdded = false;
+    let accumulatedContent = '';
+    
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    
+    function processStream() {
+      return reader.read().then(({ done, value }) => {
+        if (done) {
+          // 如果流结束了但还没有添加过消息（没有收到任何内容）
+          if (!messageAdded) {
+            currentConversation.value.messages.push({
+              role: 'assistant',
+              content: '收到您的消息了，但暂时没有回复。请稍后再试。',
+              time: new Date().toLocaleTimeString()
+            });
+          }
+          loading.value = false;
+          return;
+        }
+        
+        const chunk = decoder.decode(value, { stream: true });
+        // 处理SSE数据
+        const lines = chunk.split('\n');
+        for (let line of lines) {
+          if (line.startsWith('data:')) {
+            try {
+              const textContent = line.substring(5).trim();
+              
+              // 收到第一块数据时，创建助手消息
+              if (!messageAdded) {
+                currentConversation.value.messages.push({
+                  role: 'assistant',
+                  content: '',
+                  time: new Date().toLocaleTimeString()
+                });
+                messageAdded = true;
+                // 关闭loading状态，因为我们已经显示了真实的回复框
+                loading.value = false;
+              }
+              
+              // 累加内容
+              accumulatedContent += textContent;
+              
+              // 更新助手消息的内容
+              const messageIndex = currentConversation.value.messages.length - 1;
+              currentConversation.value.messages[messageIndex].content = accumulatedContent;
+              
+              // 滚动到底部
+              scrollToBottom();
+            } catch (e) {
+              console.error('处理SSE数据失败:', e);
+            }
+          }
+        }
+        
+        return processStream();
+      });
+    }
+    
+    return processStream();
+  })
+  .then(() => {
+    // 如果是新会话，创建会话记录
     if (currentConversation.value.id === 'new' && currentConversation.value.messages.length > 2) {
       const newId = Date.now().toString();
       const newTitle = userQuestion.length > 20 ? userQuestion.substring(0, 20) + '...' : userQuestion;
@@ -131,12 +256,19 @@ const sendMessage = async () => {
       currentConversation.value.id = newId;
       currentConversation.value.title = newTitle;
     }
-  } catch (error) {
+  })
+  .catch(error => {
+    console.error('获取回复失败:', error);
     ElMessage.error('获取回复失败，请稍后再试');
-    console.error(error);
-  } finally {
+    
+    // 添加错误消息
+    currentConversation.value.messages.push({
+      role: 'assistant',
+      content: '抱歉，获取回复时出现错误，请稍后再试。',
+      time: new Date().toLocaleTimeString()
+    });
     loading.value = false;
-  }
+  });
 };
 
 // 开始新对话
@@ -160,28 +292,7 @@ const startNewChat = () => {
 
 // 加载历史对话
 const loadConversation = (conversation) => {
-  // 模拟加载历史对话
-  currentConversation.value = {
-    id: conversation.id,
-    title: conversation.title,
-    messages: [
-      {
-        role: 'assistant',
-        content: '您好！我是您的智能教学助手，有什么可以帮助您的吗？',
-        time: new Date().toLocaleTimeString()
-      },
-      {
-        role: 'user',
-        content: conversation.preview,
-        time: new Date().toLocaleTimeString()
-      },
-      {
-        role: 'assistant',
-        content: '以下是我的回答...\n\n**1. 第一点**\n这是第一点的详细解释，可能包含一些专业知识和建议。\n\n**2. 第二点**\n这是第二点的内容，提供了具体的方法和步骤。\n\n**3. 第三点**\n这是第三点的补充信息，可能包含一些实用的资源链接和工具推荐。',
-        time: new Date().toLocaleTimeString()
-      }
-    ]
-  };
+  currentConversation.value = JSON.parse(JSON.stringify(conversation));
   
   // 在移动端模式下，选择历史对话后隐藏侧边栏
   if (window.innerWidth <= 768) {
@@ -222,7 +333,10 @@ const chatContainer = ref(null);
 const scrollToBottom = () => {
   if (chatContainer.value) {
     setTimeout(() => {
-      chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+      chatContainer.value.scrollTo({
+        top: chatContainer.value.scrollHeight,
+        behavior: 'smooth'
+      });
     }, 100);
   }
 };
@@ -230,10 +344,13 @@ const scrollToBottom = () => {
 // 监听对话历史变化，自动滚动
 watch(() => currentConversation.value.messages, scrollToBottom, { deep: true });
 
-// 监听窗口大小变化
+// 初始化
 onMounted(() => {
   scrollToBottom();
   adjustTextareaHeight();
+  
+  // 获取历史聊天记录
+  getChatHistory();
   
   window.addEventListener('resize', () => {
     if (window.innerWidth > 768) {
@@ -314,31 +431,59 @@ onMounted(() => {
             >
               <div class="message-role">
                 <div class="role-avatar" :class="message.role === 'user' ? 'user-avatar' : 'assistant-avatar'">
-                  <User v-if="message.role === 'user'" class="w-4 h-4" />
-                  <Bot v-else class="w-4 h-4" />
+                  <img 
+                    v-if="message.role === 'user'" 
+                    :src="userAvatarUrl" 
+                    alt="用户头像"
+                    class="avatar-image"
+                    @error="$event.target.style.display='none'"
+                  />
+                  <img 
+                    v-else-if="assistantAvatarUrl" 
+                    :src="assistantAvatarUrl" 
+                    alt="助手头像"
+                    class="avatar-image"
+                    @error="$event.target.style.display='none'"
+                  />
+                  <User v-if="message.role === 'user' && !userAvatarUrl" class="w-4 h-4" />
+                  <Bot v-if="message.role !== 'user' && !assistantAvatarUrl" class="w-4 h-4" />
                 </div>
                 <div class="message-time">{{ message.time }}</div>
               </div>
-              <div class="message-content" :class="message.role === 'user' ? 'user-bubble' : 'assistant-bubble'">
+              <div 
+                class="message-content" 
+                :class="[
+                  message.role === 'user' ? 'user-bubble' : 'assistant-bubble',
+                  message.content ? 'has-content' : ''
+                ]"
+              >
                 <div v-if="message.role === 'user'">{{ message.content }}</div>
                 <div v-else v-html="renderMarkdown(message.content)" class="markdown-content"></div>
               </div>
             </div>
             
-            <!-- 加载指示器 -->
-            <div v-if="loading" class="message-item assistant-message loading-message">
+            <!-- 加载指示器，只有当没有空消息时才显示 -->
+            <div v-if="loading && !hasEmptyAssistantMessage" class="message-item assistant-message loading-message">
               <div class="message-role">
                 <div class="role-avatar assistant-avatar">
-                  <Bot class="w-4 h-4" />
+                  <img 
+                    v-if="assistantAvatarUrl" 
+                    :src="assistantAvatarUrl" 
+                    alt="助手头像"
+                    class="avatar-image"
+                    @error="$event.target.style.display='none'"
+                  />
+                  <Bot v-else class="w-4 h-4" />
                 </div>
                 <div class="message-time">{{ new Date().toLocaleTimeString() }}</div>
               </div>
-              <div class="message-content assistant-bubble">
-                <div class="typing-container">
-                  <div class="typing-indicator">
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                    <div class="dot"></div>
+              <div class="message-content assistant-bubble loading-bubble">
+                <div class="thinking-container">
+                  <span class="thinking-text">思考中</span>
+                  <div class="thinking-dots">
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
                   </div>
                 </div>
               </div>
@@ -357,15 +502,23 @@ onMounted(() => {
                 class="chat-textarea"
                 rows="1"
                 ref="inputTextarea"
+                :disabled="loading"
               ></textarea>
-              <button 
-                @click="sendMessage"
-                :disabled="!userInput.trim() || loading"
-                class="send-button"
-                :class="{ 'send-button-active': userInput.trim() }"
-              >
-                <Send class="w-5 h-5" />
-              </button>
+              <div class="input-actions">
+                <button 
+                  @click="sendMessage"
+                  :disabled="!userInput.trim() || loading"
+                  class="send-button"
+                  :class="{ 
+                    'send-button-active': userInput.trim(),
+                    'send-button-pulse': userInput.trim() && !loading,
+                    'send-animation': messageSent
+                  }"
+                  :title="loading ? '正在处理...' : '发送消息'"
+                >
+                  <Send class="w-5 h-5" />
+                </button>
+              </div>
             </div>
             <div class="input-footer">
               <p class="disclaimer">智能助手可能会产生错误信息，请以教学大纲为准。按 Shift + Enter 换行</p>
@@ -488,6 +641,16 @@ onMounted(() => {
 
 .message-item {
   @apply mb-6 clear-both;
+  animation: fadeIn 0.3s ease-out;
+  transition: all 0.3s ease;
+}
+
+.user-message {
+  transform-origin: right center;
+}
+
+.assistant-message {
+  transform-origin: left center;
 }
 
 .message-role {
@@ -495,15 +658,21 @@ onMounted(() => {
 }
 
 .role-avatar {
-  @apply w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium text-white;
+  @apply w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium text-white overflow-hidden;
+}
+
+.avatar-image {
+  @apply w-full h-full object-cover;
 }
 
 .user-avatar {
   @apply bg-primary-600;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .assistant-avatar {
   @apply bg-secondary-600;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .message-time {
@@ -521,16 +690,32 @@ onMounted(() => {
 .message-content {
   @apply px-6 py-4 rounded-2xl whitespace-pre-line text-sm max-w-[90%] clear-both;
   line-height: 1.6;
+  transition: all 0.3s ease-out;
+}
+
+.message-content.has-content {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .user-bubble {
   @apply bg-primary-600 text-white float-right rounded-tr-none shadow-soft-sm;
   min-width: 120px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border-bottom-right-radius: 4px;
+  background-image: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
 }
 
 .assistant-bubble {
   @apply bg-white text-gray-800 float-left rounded-tl-none shadow-soft-sm border border-gray-200;
   min-width: 120px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border-bottom-left-radius: 4px;
+  border-top: 1px solid rgba(99, 102, 241, 0.1);
 }
 
 .markdown-content {
@@ -597,63 +782,50 @@ onMounted(() => {
   @apply my-4 border-t border-gray-200;
 }
 
-.loading-message .message-content {
-  @apply bg-white float-left;
+.loading-message {
+  animation: fadeIn 0.3s ease-in-out;
 }
 
-.typing-container {
-  @apply min-w-[60px] flex items-center;
+.loading-bubble {
+  background: linear-gradient(to right, #eef2ff, #dbeafe);
+  min-width: 120px;
+  border: 1px dashed rgba(99, 102, 241, 0.3);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  padding: 12px 18px;
+  max-width: 160px;
+  border-radius: 16px;
+  border-top-left-radius: 4px;
+  animation: pulse-light 2s infinite ease-in-out;
+  display: inline-block;
 }
 
-/* 输入区域样式 */
-.chat-input-area {
-  @apply p-4 bg-white sticky bottom-0;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+.thinking-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
-.input-card {
-  @apply overflow-visible;
-  max-width: 95%;
-  margin: 0 auto;
+.thinking-text {
+  @apply text-sm font-medium;
+  color: #4338ca;
+  letter-spacing: 0.5px;
+  position: relative;
 }
 
-.input-container {
-  @apply relative;
-}
-
-.chat-textarea {
-  @apply w-full py-4 px-5 pr-14 border border-gray-300 rounded-full outline-none resize-none transition-all text-sm;
-  min-height: 50px;
-  max-height: 150px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-}
-
-.chat-textarea:focus {
-  @apply border-primary-500 ring-1 ring-primary-200;
-}
-
-.send-button {
-  @apply absolute right-4 bottom-3 p-2 rounded-full text-gray-400 hover:bg-gray-100 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
-}
-
-.send-button-active {
-  @apply text-primary-600 hover:bg-primary-50;
-}
-
-.input-footer {
-  @apply mt-2;
-}
-
-.disclaimer {
-  @apply text-xs text-gray-500 text-center;
-}
-
-.typing-indicator {
-  @apply flex space-x-1 py-1;
+.thinking-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
 }
 
 .dot {
-  @apply w-1.5 h-1.5 bg-gray-400 rounded-full;
+  width: 6px;
+  height: 6px;
+  background-color: #4338ca;
+  border-radius: 50%;
+  opacity: 0.7;
+  display: inline-block;
   animation: bounce 1.4s infinite ease-in-out;
   animation-fill-mode: both;
 }
@@ -672,6 +844,116 @@ onMounted(() => {
   } 40% { 
     transform: scale(1.0);
   }
+}
+
+@keyframes pulse-light {
+  0% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.2);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(99, 102, 241, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+  }
+}
+
+/* 输入区域样式 */
+.chat-input-area {
+  @apply p-4 bg-white sticky bottom-0;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.input-card {
+  @apply overflow-visible;
+  max-width: 95%;
+  margin: 0 auto;
+}
+
+.input-container {
+  @apply relative;
+  display: flex;
+  align-items: center;
+}
+
+.chat-textarea {
+  @apply w-full py-4 px-5 pr-14 border border-gray-300 rounded-full outline-none resize-none transition-all text-sm;
+  min-height: 50px;
+  max-height: 150px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  border-radius: 24px;
+}
+
+.chat-textarea:focus {
+  @apply border-primary-500 ring-1 ring-primary-200;
+  transform: translateY(-1px);
+}
+
+.chat-textarea:disabled {
+  @apply bg-gray-100 cursor-not-allowed;
+}
+
+.input-actions {
+  position: absolute;
+  right: 12px;
+  bottom: 50%;
+  transform: translateY(50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.send-button {
+  @apply p-2 rounded-full text-gray-400 hover:bg-gray-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  transform: scale(1);
+  transition: all 0.2s ease;
+  height: 38px;
+  width: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.send-button:active {
+  transform: scale(0.92);
+}
+
+.send-button-active {
+  @apply text-white bg-primary-600 hover:bg-primary-700;
+}
+
+.send-button-pulse {
+  animation: pulse 1.5s infinite;
+}
+
+.send-animation {
+  animation: sendZoom 0.3s ease-out forwards;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(79, 70, 229, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+  }
+}
+
+@keyframes sendZoom {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.85); opacity: 0.8; }
+  100% { transform: scale(1); }
+}
+
+.input-footer {
+  @apply mt-2;
+}
+
+.disclaimer {
+  @apply text-xs text-gray-500 text-center;
 }
 
 /* 响应式设计 */

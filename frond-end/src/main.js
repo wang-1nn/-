@@ -1,9 +1,22 @@
+// 设置自定义 daisyUI 主题（需在加载 Tailwind 样式前执行）
+if (!document.documentElement.getAttribute('data-theme')) {
+  document.documentElement.setAttribute('data-theme', 'education');
+}
+
+import { autoAnimatePlugin } from '@formkit/auto-animate/vue'
+import { MotionPlugin } from '@vueuse/motion'
+
 import {createApp} from 'vue'
 import {createPinia} from 'pinia'
 import App from './App.vue'
 import router from './router'
 import ElementPlus from 'element-plus'
+import VueDOMPurifyHTML from 'vue-dompurify-html'
+import VueVirtualScroller from 'vue3-virtual-scroller'
+import 'vue3-virtual-scroller/dist/vue3-virtual-scroller.css'
 import 'element-plus/dist/index.css'
+import 'github-markdown-css'
+import 'highlight.js/styles/github-dark.css'
 import Antd from 'ant-design-vue'
 import 'ant-design-vue/dist/reset.css'
 import axios from 'axios'
@@ -40,6 +53,12 @@ app.use(ElementPlus, {
 })
 app.use(Antd)
 
+// 注册 DOMPurify 插件，自动提供 v-dompurify-html 指令
+app.use(VueDOMPurifyHTML)
+
+// 全局注册虚拟滚动组件（<virtual-list> 等）
+app.use(VueVirtualScroller)
+
 // 挂载 axios
 app.config.globalProperties.$axios = axios
 
@@ -51,5 +70,11 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 // 注册全局组件
 app.component('BaseCard', BaseCard)
 app.component('BaseButton', BaseButton)
+
+// Auto-Animate 指令 v-auto-animate
+app.use(autoAnimatePlugin)
+
+// VueUse Motion 动画插件（提供 v-motion 指令）
+app.use(MotionPlugin)
 
 app.mount('#app')

@@ -119,7 +119,42 @@ export default {
   plugins: [
     require('@tailwindcss/forms'),
     require('@tailwindcss/typography'),
+    require('daisyui'),
   ],
 
+  daisyui: {
+    themes: [
+      {
+        education: {
+          'primary': '#6366f1',
+          'primary-focus': '#4f46e5',
+          'primary-content': '#ffffff',
+
+          'secondary': '#0ea5e9',
+          'secondary-focus': '#0284c7',
+          'secondary-content': '#ffffff',
+
+          'accent': '#34d399',
+          'accent-focus': '#059669',
+          'accent-content': '#ffffff',
+
+          'neutral': '#1f2937',
+          'neutral-focus': '#111827',
+          'neutral-content': '#ffffff',
+
+          'base-100': '#ffffff',
+          'base-200': '#f3f4f6',
+          'base-300': '#e5e7eb',
+          'base-content': '#1f2937',
+
+          'info': '#0ea5e9',
+          'success': '#10b981',
+          'warning': '#fbbf24',
+          'error': '#ef4444',
+        },
+      },
+      'dark',
+    ],
+  },
 }
 

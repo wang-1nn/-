@@ -5,6 +5,12 @@ spring:
       username: neo4j
       password: qw459459
   ai:
+    retry:
+      max-attempts: 6          # 默认 3
+      backoff:
+        initial-interval: 2s   # 第一次等待 2 秒
+        multiplier: 2          # 指数乘子
+        max-interval: 30s
     vectorstore:
       neo4j:
         initialize-schema: true

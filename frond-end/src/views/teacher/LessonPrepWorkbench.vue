@@ -36,34 +36,42 @@
               <div class="flex items-center gap-3">
                 <el-button size="small" @click="fileInput.click()">
                   <el-icon class="mr-1"><UploadFilled /></el-icon>导入大纲
-                </el-button>
-                <input ref="fileInput" type="file" class="hidden" accept=".pdf,.doc,.docx" @change="onFileChange" />
-              </div>
-            </div>
-
-            <el-button 
-              v-motion="btnMotion"
-              type="primary"
-              size="small"
-              @click="handleGenerate"
-            >
-              <el-icon class="mr-1"><MagicStick /></el-icon>生成教案
             </el-button>
+                <input ref="fileInput" type="file" class="hidden" accept=".pdf,.doc,.docx" @change="onFileChange" />
+          </div>
+        </div>
+
+            <div class="flex items-center gap-3">
+              <el-button 
+                v-motion="btnMotion"
+                type="primary" 
+                size="small"
+                @click="handleGenerate" 
+              >
+                <el-icon class="mr-1"><MagicStick /></el-icon>生成教案
+              </el-button>
+              <el-button size="small" :disabled="!lessonBuffer" @click="openEditor">
+                <el-icon class="mr-1"><DocumentCopy /></el-icon>编辑教案
+                </el-button>
+            </div>
           </div>
         </template>
       </PreviewPane>
-    </div>
+            </div>
 
     <!-- ======= 教案预览 Drawer ======= -->
     <el-drawer v-model="showPreviewDrawer" :with-header="false" size="40%" direction="rtl" @opened="() => { currentStep = 2 }" @closed="() => { currentStep = 1 }">
       <div class="p-6 h-full overflow-y-auto prose dark:prose-invert">
         <h2 class="mb-4">教案预览</h2>
-        <div v-if="!streamingText" class="text-slate-500 text-center flex items-center justify-center h-full">
+        <div v-if="!lessonBuffer" class="text-slate-500 text-center flex items-center justify-center h-full">
           <el-icon class="mr-1"><Document /></el-icon>暂无内容，请先生成教案。
         </div>
-        <div v-else v-dompurify-html="formattedText"></div>
+        <div v-else v-dompurify-html="lessonBuffer"></div>
       </div>
     </el-drawer>
+
+    <!-- ===== 教案编辑弹窗 ===== -->
+    <LessonPlanEditor v-model:visible="showEditor" v-model="editorContent" @save="handleSaveLesson" />
   </div>
 </template>
 
@@ -98,6 +106,11 @@ import { templates as snippetTemplates } from '@/utils/templates';
 import { bus } from '@/utils/eventBus';
 import TemplatePane from '@/components/lesson-prep/TemplatePane.vue';
 import PreviewPane from '@/components/lesson-prep/PreviewPane.vue';
+import { useAuthStore } from '@/stores/counter.js';
+import LessonPlanEditor from '@/components/lesson-prep/LessonPlanEditor.vue';
+
+// 获取用户信息
+const user = useAuthStore().user;
 
 // --- State from ModelStatusToast ---
 const modelName = ref('gemma-7b-it');
@@ -155,6 +168,37 @@ const showPreviewDrawer = ref(false);
 const openPreview = () => {
   showPreviewDrawer.value = true;
 };
+
+// ===== 教案编辑弹窗 =====
+const showEditor = ref(false);
+const editorContent = ref('');
+const lessonBuffer = ref('');
+
+// 监听流式内容更新
+bus.on('md-ready', (md)=>{ lessonBuffer.value = md || ''; });
+bus.on('md-chunk', (chunk)=>{ lessonBuffer.value += chunk || ''; });
+
+function openEditor() {
+  editorContent.value = lessonBuffer.value;
+  showEditor.value = true;
+}
+
+function handleSaveLesson(content) {
+  // 保存到本地文件
+  const blob = new Blob([content], { type: 'text/html;charset=utf-8' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `lesson-plan-${Date.now()}.html`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+// 监听 bus 触发打开编辑器事件
+bus.on('open-editor', (full) => {
+  editorContent.value = full;
+  showEditor.value = true;
+});
 
 // --- Logic & Methods ---
 
@@ -254,10 +298,6 @@ const insertInEditor = (text) => {
   editor.focus();
 };
 
-
-import {useAuthStore} from '@/stores/counter.js'
-
-const user = useAuthStore().user
 // Method from OutlineImport - 使用原生 fetch + SSE 处理流式返回
 const handleBeforeUpload = (file) => {
   // 调用后端解析并优化教学大纲
@@ -270,7 +310,9 @@ const handleBeforeUpload = (file) => {
   formData.append('files', file);
 
   // 构造带有鉴权的请求头（如果本地存储有 token）
-  const headers = {};
+  const headers = {
+    'Accept': 'text/event-stream'
+  };
   const token = localStorage.getItem('authToken');
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
@@ -281,17 +323,25 @@ const handleBeforeUpload = (file) => {
     headers,
     body: formData
   })
-    .then(async (response) => {
+    .then((response) => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const rawText = await response.text(); // 后端一次性返回 Markdown 字符串
-      const cleaned = preprocessMdChunk(rawText.trim());
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
 
-      /* === 打字机效果 === */
-      let typingQueue = cleaned + '\n';
+      let htmlBuffer = '';
+      let sseBuffer = '';
+      let typingQueue = '';
       let typingTimer = null;
+
+      const enqueue = (str) => {
+        if (!str) return;
+        typingQueue += str;
+        bus.emit('md-chunk', str);
+        startTyping();
+      };
 
       const startTyping = () => {
         if (typingTimer) return;
@@ -299,61 +349,87 @@ const handleBeforeUpload = (file) => {
           if (!typingQueue.length) {
             clearInterval(typingTimer);
             typingTimer = null;
-            // 完成后状态复位
-            outlineData.value = [];
-            isParsing.value = false;
-            currentStep.value = 1;
-            // 向右侧预览发送完整 Markdown（立即渲染）
-            bus.emit('md-ready', cleaned);
+            return;
+          }
+          const ch = typingQueue[0];
+          typingQueue = typingQueue.slice(1);
+          prompt.value += ch;
+        }, 6);
+      };
+
+      const flushHtmlBuffer = () => {
+        let idx;
+        // 以标签闭合作为切分点
+        while ((idx = htmlBuffer.indexOf('>')) !== -1) {
+          const segment = htmlBuffer.slice(0, idx + 1);
+          htmlBuffer = htmlBuffer.slice(idx + 1);
+          enqueue(segment);
+        }
+        // 处理纯文本
+        if (htmlBuffer && !htmlBuffer.includes('<')) {
+          enqueue(htmlBuffer);
+          htmlBuffer = '';
+        }
+      };
+
+      const processSSEBuffer = () => {
+        let sep;
+        // 寻找完整事件（以空行分隔）
+        while ((sep = sseBuffer.indexOf('\n\n')) !== -1) {
+          const eventBlock = sseBuffer.slice(0, sep);
+          sseBuffer = sseBuffer.slice(sep + 2);
+
+          // 处理 eventBlock，抽取 data 行
+          const dataLines = eventBlock
+            .split(/\n/)
+            .filter(l => l.startsWith('data:'))
+            .map(l => l.slice(5));
+
+          const dataStr = dataLines.join('\n');
+          htmlBuffer += dataStr;
+          flushHtmlBuffer();
+    }
+  };
+
+      const pump = () => {
+        reader.read().then(({ done, value }) => {
+          if (done) {
+            // 处理剩余数据
+            processSSEBuffer();
+            flushHtmlBuffer();
+            bus.emit('preview-loading', false);
             return;
           }
 
-          const ch = typingQueue[0];
-          typingQueue = typingQueue.slice(1);
-
-          // 更新 prompt
-          prompt.value += ch;
-
-          // 写入编辑器（若可见）
-          if (editor) {
-            const model = editor.getModel();
-            if (model) {
-              const lineCount = model.getLineCount();
-              const lastCol = model.getLineMaxColumn(lineCount);
-              model.applyEdits([
-                {
-                  range: new monaco.Range(lineCount, lastCol, lineCount, lastCol),
-                  text: ch
-                }
-              ]);
-              editor.revealLine(lineCount);
-            }
-          }
-        }, 8);
+          const chunk = decoder.decode(value, { stream: true });
+          sseBuffer += chunk.replace(/\r/g, ''); // 统一换行符
+          processSSEBuffer();
+          pump();
+        });
       };
-
-      // 清空现有内容再开始动画
-      prompt.value = '';
-      startTyping();
-
-      // 关闭加载指示
-      bus.emit('preview-loading', false);
+      pump();
     })
     .catch(err => {
-      console.error(err);
-      isParsing.value = false;
-    });
+    console.error(err);
+    isParsing.value = false;
+      bus.emit('preview-loading', false);
+  });
 
   // 阻止 el-upload 默认上传行为
   return false;
 };
 
-// 预处理 Markdown 块，兜底修正标题格式等
-const preprocessMdChunk = (str) => {
-  return str
-    .replace(/^(#+)([^ #])/gm, '$1 $2')      // 标题 # 后补空格
-    .replace(/(#+ .+?)(#+)/gm, '$1\n\n$2'); // 连续标题换行
-};
+// 添加preprocessMdChunk函数，用于处理Markdown块
+function preprocessMdChunk(chunk) {
+  if (!chunk) return '';
+  
+  // 清理特殊字符和格式问题
+  return chunk
+    .replace(/\\n/g, '\n')  // 替换转义的换行符
+    .replace(/\\\\/g, '\\') // 替换转义的反斜杠
+    .replace(/\\\"/g, '"')  // 替换转义的引号
+    .trim();
+}
 
 // 将 meta 对象递归转换为 Markdown 列表
 const metaToMarkdown = (meta, indent = 0) => {
@@ -422,21 +498,80 @@ const handleGenerate = () => {
 
   bus.emit('preview-loading', true);
 
+  // 创建FormData
   const formData = new FormData();
   formData.append('message', message);
+  
+  // 构造带有鉴权的请求头（如果本地存储有 token）
+  const headers = {
+    'Accept': 'text/event-stream'
+  };
+  const token = localStorage.getItem('authToken');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
 
+  // 创建SSE连接
   fetch(`/api/teacher/Ai/CreateLesson?id=${user.id}`, {
     method: 'POST',
+    headers,
     body: formData
   })
-  .then(res=>res.text())
-  .then(md=>{
-     const cleaned = preprocessMdChunk(md.trim());
-     bus.emit('md-ready', cleaned);
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+
+    let sseBuffer = '';
+    
+    // 清空之前的内容
+    bus.emit('md-ready', '');
+
+    const processSSEBuffer = () => {
+      let sep;
+      // 寻找完整事件（以空行分隔）
+      while ((sep = sseBuffer.indexOf('\n\n')) !== -1) {
+        const eventBlock = sseBuffer.slice(0, sep);
+        sseBuffer = sseBuffer.slice(sep + 2);
+
+        // 处理 eventBlock，抽取 data 行
+        const dataLines = eventBlock
+          .split(/\n/)
+          .filter(l => l.startsWith('data:'))
+          .map(l => l.slice(5));
+
+        const dataStr = dataLines.join('\n');
+        if (dataStr) {
+          // 处理接收到的Markdown块
+          const chunk = preprocessMdChunk(dataStr);
+          bus.emit('md-chunk', chunk);
+        }
+      }
+    };
+
+    const pump = () => {
+      reader.read().then(({ done, value }) => {
+        if (done) {
+          // 处理剩余数据
+          processSSEBuffer();
+          bus.emit('preview-loading', false);
+          return;
+        }
+
+        const chunk = decoder.decode(value, { stream: true });
+        sseBuffer += chunk.replace(/\r/g, ''); // 统一换行符
+        processSSEBuffer();
+        pump();
+      });
+    };
+    pump();
   })
-  .catch(console.error)
-  .finally(()=>{
-     bus.emit('preview-loading', false);
+  .catch(err => {
+    console.error('生成教案出错:', err);
+    bus.emit('preview-loading', false);
   });
 };
 

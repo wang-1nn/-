@@ -316,3 +316,43 @@
 .correct-item {
   @apply p-4 border-l-4 border-green-500 bg-green-50 rounded-r-lg mb-4;
 }
+
+/* 滚动容器优化 */
+.markdown-scroll {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: auto;
+  scroll-behavior: auto;
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: thin; /* Firefox */
+  
+  /* 防止滚动链和浏览器弹性行为 */
+  overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
+  
+  /* 阻止滚动传播 */
+  isolation: isolate;
+  
+  /* 确保滚动容器有自己的堆叠上下文 */
+  position: relative;
+  z-index: 1;
+  
+  /* 禁用滚动动画 */
+  scroll-behavior: auto !important;
+  
+  /* 防止滚动链传播 */
+  scroll-snap-type: none;
+}
+
+/* 滚动条样式 */
+.markdown-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.markdown-scroll::-webkit-scrollbar-thumb {
+  background-color: #a5b4fc; /* indigo-300 */
+  border-radius: 4px;
+}
+
+.markdown-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}

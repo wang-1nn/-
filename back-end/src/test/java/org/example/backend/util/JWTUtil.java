@@ -5,7 +5,7 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import org.example.backend.entity.User;
+import org.example.backend.entity.pojo.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

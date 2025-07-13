@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "歌者PPT": {
+      "command": "npx.cmd",
+      "args": ["-y", "gezhe-mcp-server@latest"],
+      "env": {
+        "API_KEY": "CwINed329hAHXNVD1572GRIWza20FG0Gew7iSQS4xDHYxVXekYoEuraEdVFp7pSi"
+      }
+    },
+    "bingcnmcp": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "bing-cn-mcp"
+      ]
+    }
+  }
+}

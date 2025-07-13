@@ -1,33 +1,16 @@
 package org.example.backend.service.impl;
 
 import jakarta.annotation.Resource;
-import org.example.backend.entity.dto.CourseDTO;
-import org.example.backend.entity.dto.CourseDetailDTO;
-import org.example.backend.entity.dto.CourseResourceDTO;
-import org.example.backend.entity.dto.DiscussionDTO;
-import org.example.backend.entity.dto.QuizDTO;
-import org.example.backend.entity.dto.LearningNoteDTO;
-import org.example.backend.entity.dto.ChapterRatingDTO;
-import org.example.backend.entity.dto.LearningStatisticsDTO;
-import org.example.backend.entity.pojo.TodoTask;
-import org.example.backend.entity.pojo.User;
-import org.example.backend.entity.pojo.LearningNote;
-import org.example.backend.entity.pojo.ChapterRating;
-import org.example.backend.entity.pojo.LearningStatisticsDetail;
+import org.example.backend.entity.dto.*;
+import org.example.backend.entity.pojo.*;
 import org.example.backend.entity.vo.DashboardDataVO;
-import org.example.backend.entity.vo.DashboardDataVO.StatItemVO;
 import org.example.backend.entity.vo.DashboardDataVO.CourseProgressVO;
 import org.example.backend.entity.vo.DashboardDataVO.RecommendationVO;
-import org.example.backend.entity.vo.DashboardWidgetsVO.ExamScoreVO;
-import org.example.backend.entity.vo.DashboardWidgetsVO.ScoreOverviewVO;
-import org.example.backend.entity.vo.DashboardWidgetsVO.StudyTimeVO;
-import org.example.backend.entity.vo.DashboardWidgetsVO.TodoTasksVO;
-import org.example.backend.entity.vo.DashboardWidgetsVO.DailyStudyVO;
-import org.example.backend.entity.vo.DashboardWidgetsVO.TaskItemVO;
+import org.example.backend.entity.vo.DashboardDataVO.StatItemVO;
+import org.example.backend.entity.vo.DashboardWidgetsVO.*;
 import org.example.backend.mapper.StudentMapper;
 import org.example.backend.mapper.UserMapper;
 import org.example.backend.service.StudentService;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -35,9 +18,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.stream.Collectors;
 
 /**

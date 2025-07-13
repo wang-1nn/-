@@ -2,7 +2,7 @@ package org.example.backend.controller;
 
 
 import jakarta.annotation.Resource;
-import org.example.backend.entity.User;
+import org.example.backend.entity.pojo.User;
 import org.example.backend.service.UserService;
 import org.example.backend.util.JWTUtil;
 import org.example.backend.util.RestBean;

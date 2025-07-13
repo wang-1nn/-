@@ -1,8 +1,7 @@
 package org.example.backend.mapper;
 
 import org.apache.ibatis.annotations.*;
-import org.example.backend.entity.User;
-import org.springframework.web.multipart.MultipartFile;
+import org.example.backend.entity.pojo.User;
 
 import java.util.Date;
 

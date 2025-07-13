@@ -6,24 +6,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.entity.dto.*;
-import org.example.backend.entity.pojo.AdaptiveExam;
-import org.example.backend.entity.pojo.AdaptiveExamResult;
-import org.example.backend.entity.pojo.AdaptiveQuestion;
+import org.example.backend.entity.pojo.*;
 import org.example.backend.mapper.AdaptiveExamMapper;
 import org.example.backend.mapper.CourseMapper;
 import org.example.backend.service.AdaptiveExamService;
-import org.example.backend.service.ai.TeacherAi.QuestionAiService;
+import org.example.backend.service.impl.ai.TeacherAi.QuestionAiService;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
-import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import reactor.core.publisher.Flux;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -40,8 +34,8 @@ public class AdaptiveExamServiceImpl implements AdaptiveExamService {
     @Autowired
     private final AdaptiveExamMapper adaptiveExamMapper;
     
-    @Autowired
-    private ChatClient chatClient;
+
+ChatClient chatClient;
 
     @Autowired
     private final ObjectMapper objectMapper;

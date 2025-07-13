@@ -11,11 +11,84 @@
  Target Server Version : 80400 (8.4.0)
  File Encoding         : 65001
 
- Date: 13/07/2025 13:25:34
+ Date: 13/07/2025 21:19:55
 */
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for adaptive_exam_results
+-- ----------------------------
+DROP TABLE IF EXISTS `adaptive_exam_results`;
+CREATE TABLE `adaptive_exam_results`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '结果ID',
+  `exam_id` bigint NOT NULL COMMENT '测试ID',
+  `user_id` bigint NOT NULL COMMENT '学生ID',
+  `score` decimal(5, 2) NOT NULL COMMENT '最终得分',
+  `ability_level` decimal(5, 2) NOT NULL COMMENT '能力水平评估',
+  `total_questions` int NOT NULL COMMENT '总题数',
+  `correct_count` int NOT NULL COMMENT '答对题数',
+  `topic_scores` json NULL COMMENT '各知识点得分情况',
+  `strengths` json NULL COMMENT '优势知识点',
+  `weaknesses` json NULL COMMENT '弱势知识点',
+  `analysis` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT 'AI分析报告',
+  `recommendations` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '学习建议',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_exam_id`(`exam_id` ASC) USING BTREE,
+  INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
+  CONSTRAINT `fk_adaptive_result_exam` FOREIGN KEY (`exam_id`) REFERENCES `adaptive_exams` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `fk_adaptive_result_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '自适应测试结果表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for adaptive_exams
+-- ----------------------------
+DROP TABLE IF EXISTS `adaptive_exams`;
+CREATE TABLE `adaptive_exams`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '测试ID',
+  `user_id` bigint NOT NULL COMMENT '学生ID',
+  `subject` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '测试科目',
+  `difficulty` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'medium' COMMENT '当前难度水平',
+  `starting_difficulty` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'medium' COMMENT '起始难度',
+  `question_count` int NOT NULL DEFAULT 20 COMMENT '题目总数',
+  `current_question` int NOT NULL DEFAULT 0 COMMENT '当前题目序号',
+  `time_limit` int NOT NULL DEFAULT 45 COMMENT '时间限制(分钟)',
+  `topics` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '知识点，以逗号分隔',
+  `status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '测试状态',
+  `score` decimal(5, 2) NULL DEFAULT NULL COMMENT '最终得分',
+  `ability_level` decimal(5, 2) NULL DEFAULT NULL COMMENT '能力水平评估值',
+  `start_time` datetime NULL DEFAULT NULL COMMENT '开始时间',
+  `end_time` datetime NULL DEFAULT NULL COMMENT '结束时间',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
+  CONSTRAINT `fk_adaptive_exam_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 21 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '自适应智能测试表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for adaptive_questions
+-- ----------------------------
+DROP TABLE IF EXISTS `adaptive_questions`;
+CREATE TABLE `adaptive_questions`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '题目ID',
+  `exam_id` bigint NOT NULL COMMENT '测试ID',
+  `question_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '题目类型',
+  `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '题目内容',
+  `options` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '选项，JSON格式',
+  `answer` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '正确答案',
+  `user_answer` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '用户答案',
+  `topic` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '所属知识点',
+  `difficulty` int NOT NULL COMMENT '题目难度(1-5)',
+  `score` decimal(5, 2) NOT NULL COMMENT '题目分值',
+  `is_correct` tinyint(1) NULL DEFAULT NULL COMMENT '是否答对',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `answered_at` datetime NULL DEFAULT NULL COMMENT '作答时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_exam_id`(`exam_id` ASC) USING BTREE,
+  CONSTRAINT `fk_adaptive_question_exam` FOREIGN KEY (`exam_id`) REFERENCES `adaptive_exams` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 167 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '自适应测试题目表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for answers
@@ -35,7 +108,7 @@ CREATE TABLE `answers`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_submission_id`(`submission_id` ASC) USING BTREE,
   INDEX `idx_question_id`(`question_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 736 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '学生答案表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 758 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '学生答案表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for chapter_contents
@@ -78,7 +151,7 @@ CREATE TABLE `chapter_ratings`  (
   CONSTRAINT `fk_rating_chapter` FOREIGN KEY (`chapter_id`) REFERENCES `course_chapters` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_rating_course` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_rating_student` FOREIGN KEY (`student_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '章节评价表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '章节评价表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for classes
@@ -149,7 +222,7 @@ CREATE TABLE `course_favorites`  (
   INDEX `idx_course_id`(`course_id` ASC) USING BTREE,
   CONSTRAINT `fk_favorite_course` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_favorite_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '课程收藏表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '课程收藏表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for course_offerings
@@ -182,7 +255,7 @@ CREATE TABLE `course_progress`  (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_student_course`(`student_id` ASC, `course_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 91 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 92 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for courses
@@ -333,7 +406,7 @@ CREATE TABLE `learning_notes`  (
   CONSTRAINT `fk_note_content` FOREIGN KEY (`content_id`) REFERENCES `chapter_contents` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_note_course` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_note_student` FOREIGN KEY (`student_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '学习笔记表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '学习笔记表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for learning_records
@@ -350,7 +423,7 @@ CREATE TABLE `learning_records`  (
   `duration` int NULL DEFAULT NULL COMMENT '学习时长(秒)',
   `progress` decimal(5, 2) NULL DEFAULT NULL COMMENT '完成进度(百分比)',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 134 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '学习活动记录表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 138 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '学习活动记录表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for learning_statistics
@@ -393,7 +466,7 @@ CREATE TABLE `learning_statistics_detail`  (
   CONSTRAINT `fk_stats_detail_chapter` FOREIGN KEY (`chapter_id`) REFERENCES `course_chapters` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_stats_detail_course` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_stats_detail_student` FOREIGN KEY (`student_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 152 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '学习统计详情表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 154 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '学习统计详情表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for lesson_plans
@@ -439,7 +512,7 @@ CREATE TABLE `question_batch`  (
   `batch_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `question_id`(`question_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 190 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for questions
@@ -460,7 +533,7 @@ CREATE TABLE `questions`  (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `id` int NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 50 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 247 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for spring_ai_chat_memory
@@ -515,7 +588,7 @@ CREATE TABLE `submissions`  (
   INDEX `idx_exam_student`(`exam_id` ASC, `student_id` ASC) USING BTREE,
   INDEX `idx_student_id`(`student_id` ASC) USING BTREE,
   CONSTRAINT `fk_submission_student` FOREIGN KEY (`student_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 608 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '考试提交记录表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 609 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '考试提交记录表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for system_logs
@@ -645,7 +718,10 @@ CREATE TABLE `users`  (
   `created_at` date NOT NULL COMMENT '账户创建时间',
   `last_login` datetime NULL DEFAULT NULL COMMENT '最后登录时间',
   `status` tinyint NULL DEFAULT 1 COMMENT '账户状态: 1-正常，0-禁用',
-  PRIMARY KEY (`user_id`) USING BTREE
+  `class` bigint NULL DEFAULT NULL COMMENT '班级id',
+  PRIMARY KEY (`user_id`) USING BTREE,
+  INDEX `class_key`(`class` ASC) USING BTREE,
+  CONSTRAINT `class_key` FOREIGN KEY (`class`) REFERENCES `classes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE = InnoDB AUTO_INCREMENT = 202 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '系统用户信息表' ROW_FORMAT = Dynamic;
 
 SET FOREIGN_KEY_CHECKS = 1;

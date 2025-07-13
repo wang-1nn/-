@@ -2,6 +2,9 @@ package org.example.backend.service.impl;
 
 import org.example.backend.entity.dto.ChapterContentDTO;
 import org.example.backend.entity.dto.CourseChapterDTO;
+import org.example.backend.entity.pojo.ChapterContent;
+import org.example.backend.entity.pojo.CourseChapter;
+import org.example.backend.entity.pojo.LearningStatisticsDetail;
 import org.example.backend.mapper.ChapterContentMapper;
 import org.example.backend.mapper.CourseChapterMapper;
 import org.example.backend.mapper.LearningStatisticsDetailMapper;
@@ -206,10 +209,10 @@ public class ChapterServiceImpl implements ChapterService {
             }
             
             detail.setCourseId(chapter.getCourseId());
-            detail.setTotalTime(duration);
+//            detail.setTotalTime(duration);
             detail.setVisitCount(1);
             detail.setLastVisitTime(new Date());
-            detail.setCompletionStatus(0);
+//            detail.setCompletionStatus(0);
             detail.setUpdatedAt(new Date());
             
             // 保存学习统计记录

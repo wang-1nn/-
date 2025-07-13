@@ -1,7 +1,6 @@
 package org.example.backend.mapper;
 
 import org.apache.ibatis.annotations.*;
-import org.example.backend.entity.CourseFavorite;
 
 import java.util.List;
 

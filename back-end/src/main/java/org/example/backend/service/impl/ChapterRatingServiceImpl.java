@@ -33,7 +33,6 @@ public class ChapterRatingServiceImpl implements ChapterRatingService {
         if (existingRating != null) {
             // 如果已经评价过，则更新评价
             existingRating.setRating(rating.getRating());
-            existingRating.setFeedback(rating.getFeedback());
             existingRating.setUpdatedAt(new Date());
             chapterRatingMapper.update(existingRating);
             return existingRating.getId();

@@ -7,7 +7,13 @@ import org.example.backend.service.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
+import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -39,9 +45,39 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String updateAvatar(MultipartFile avatar,String userId) {
-        return userMapper.updateAvatar(avatar,userId);
-
+    public String updateAvatar(MultipartFile avatar, String userId) {
+        try {
+            // 确保上传目录存在
+            String uploadDir = "uploads/avatars/";
+            Path uploadPath = Paths.get(uploadDir);
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+            
+            // 生成唯一文件名
+            String originalFilename = avatar.getOriginalFilename();
+            String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            String newFilename = UUID.randomUUID().toString() + fileExtension;
+            
+            // 保存文件
+            Path filePath = uploadPath.resolve(newFilename);
+            Files.copy(avatar.getInputStream(), filePath);
+            
+            // 文件URL
+            String avatarUrl = "/uploads/avatars/" + newFilename;
+            
+            // 更新数据库
+            int result = userMapper.updateAvatar(avatarUrl, userId);
+            
+            if (result > 0) {
+                return avatarUrl;
+            } else {
+                return null;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override

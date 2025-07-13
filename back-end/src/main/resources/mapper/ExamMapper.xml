@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.backend.mapper.ExamMapper">
+
+    <!-- 获取学生可参加的考试列表 -->
+    <select id="findExamsByStudentId" resultType="org.example.backend.entity.pojo.Exam">
+        SELECT 
+            e.id, 
+            e.title, 
+            e.exam_type as examType, 
+            e.start_time as startTime, 
+            e.end_time as endTime,
+            c.title as courseName,
+            cl.name as className,
+            u.real_name as creatorName,
+            CASE 
+                WHEN NOW() &lt; e.start_time THEN '未开始'
+                WHEN NOW() BETWEEN e.start_time AND e.end_time THEN '进行中'
+                ELSE '已结束'
+            END as status,
+            TIMESTAMPDIFF(MINUTE, e.start_time, e.end_time) as duration
+        FROM 
+            exams e
+            JOIN course_offerings co ON e.offering_id = co.id
+            JOIN courses c ON co.course_id = c.id
+            JOIN classes cl ON co.class_id = cl.id
+            JOIN users u ON e.creator_id = u.user_id
+            JOIN enrollments en ON co.id = en.offering_id
+        WHERE 
+            en.student_id = #{studentId}
+        ORDER BY 
+            e.start_time DESC
+    </select>
+    
+    <!-- 获取考试详情 -->
+    <select id="findExamById" resultType="org.example.backend.entity.pojo.Exam">
+        SELECT 
+            e.id, 
+            e.offering_id as offeringId,
+            e.creator_id as creatorId,
+            e.title, 
+            e.exam_type as examType, 
+            e.start_time as startTime, 
+            e.end_time as endTime,
+            c.title as courseName,
+            cl.name as className,
+            u.real_name as creatorName,
+            CASE 
+                WHEN NOW() &lt; e.start_time THEN '未开始'
+                WHEN NOW() BETWEEN e.start_time AND e.end_time THEN '进行中'
+                ELSE '已结束'
+            END as status,
+            TIMESTAMPDIFF(MINUTE, e.start_time, e.end_time) as duration
+        FROM 
+            exams e
+            JOIN course_offerings co ON e.offering_id = co.id
+            JOIN courses c ON co.course_id = c.id
+            JOIN classes cl ON co.class_id = cl.id
+            JOIN users u ON e.creator_id = u.user_id
+        WHERE 
+            e.id = #{examId}
+    </select>
+    
+    <!-- 获取考试的题目列表 -->
+    <select id="findQuestionsByExamId" resultType="org.example.backend.entity.pojo.Question">
+        SELECT 
+            q.id,
+            q.question_id as questionId,
+            q.exam_id as examId,
+            q.question_type as questionType,
+            q.content,
+            q.options,
+            q.answer,
+            q.analysis,
+            q.score,
+            q.difficulty,
+            q.created_by as createdBy,
+            q.is_ai_generated as isAiGenerated,
+            q.created_at as createdAt
+        FROM 
+            questions q
+        WHERE 
+            q.exam_id = #{examId}
+        ORDER BY 
+            q.id ASC
+    </select>
+    
+    <!-- 获取学生的考试提交记录 -->
+    <select id="findSubmissionByStudentAndExam" resultType="org.example.backend.entity.pojo.Submission">
+        SELECT 
+            s.id,
+            s.exam_id as examId,
+            s.student_id as studentId,
+            s.status,
+            s.submitted_at as submittedAt,
+            s.total_score as totalScore,
+            e.title as examTitle,
+            e.exam_type as examType,
+            u.real_name as studentName,
+            e.start_time as startTime,
+            e.end_time as endTime,
+            TIMESTAMPDIFF(MINUTE, e.start_time, s.submitted_at) as duration,
+            CASE 
+                WHEN s.status = 0 THEN '进行中'
+                WHEN s.status = 1 THEN '已提交'
+                WHEN s.status = 2 THEN '已批改'
+                ELSE '未知'
+            END as statusText
+        FROM 
+            submissions s
+            JOIN exams e ON s.exam_id = e.id
+            JOIN users u ON s.student_id = u.user_id
+        WHERE 
+            s.student_id = #{studentId} AND s.exam_id = #{examId}
+    </select>
+    
+    <!-- 创建考试提交记录 -->
+    <insert id="createSubmission" parameterType="org.example.backend.entity.pojo.Submission" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO submissions (
+            exam_id, 
+            student_id, 
+            status, 
+            submitted_at, 
+            total_score
+        ) VALUES (
+            #{examId}, 
+            #{studentId}, 
+            #{status}, 
+            #{submittedAt}, 
+            #{totalScore}
+        )
+    </insert>
+    
+    <!-- 更新考试提交记录 -->
+    <update id="updateSubmission" parameterType="org.example.backend.entity.pojo.Submission">
+        UPDATE submissions
+        SET 
+            status = #{status},
+            submitted_at = #{submittedAt},
+            total_score = #{totalScore}
+        WHERE 
+            id = #{id}
+    </update>
+    
+    <!-- 获取学生的答案列表 -->
+    <select id="findAnswersBySubmissionId" resultType="org.example.backend.entity.pojo.Answer">
+        SELECT 
+            a.id,
+            a.submission_id as submissionId,
+            a.question_id as questionId,
+            a.user_answer as userAnswer,
+            a.score,
+            a.is_correct as isCorrect,
+            a.comment,
+            a.answered_at as answeredAt,
+            a.graded_by as gradedBy,
+            a.graded_at as gradedAt
+        FROM 
+            answers a
+        WHERE 
+            a.submission_id = #{submissionId}
+    </select>
+    
+    <!-- 保存学生答案 -->
+    <insert id="saveAnswer" parameterType="org.example.backend.entity.pojo.Answer" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO answers (
+            submission_id,
+            question_id,
+            user_answer,
+            score,
+            is_correct,
+            comment,
+            answered_at,
+            graded_by,
+            graded_at
+        ) VALUES (
+            #{submissionId},
+            #{questionId},
+            #{userAnswer},
+            #{score},
+            #{isCorrect},
+            #{comment},
+            #{answeredAt},
+            #{gradedBy},
+            #{gradedAt}
+        )
+    </insert>
+    
+    <!-- 更新学生答案 -->
+    <update id="updateAnswer" parameterType="org.example.backend.entity.pojo.Answer">
+        UPDATE answers
+        SET 
+            user_answer = #{userAnswer},
+            score = #{score},
+            is_correct = #{isCorrect},
+            comment = #{comment},
+            answered_at = #{answeredAt},
+            graded_by = #{gradedBy},
+            graded_at = #{gradedAt}
+        WHERE 
+            id = #{id}
+    </update>
+    
+    <!-- 获取学生的成绩列表 -->
+    <select id="findScoresByStudentId" resultType="java.util.Map">
+        SELECT 
+            s.id as submissionId,
+            e.id as examId,
+            e.title as examTitle,
+            e.exam_type as examType,
+            c.title as courseName,
+            cl.name as className,
+            s.submitted_at as submittedAt,
+            s.total_score as score,
+            CASE 
+                WHEN s.status = 0 THEN '进行中'
+                WHEN s.status = 1 THEN '已提交'
+                WHEN s.status = 2 THEN '已批改'
+                ELSE '未知'
+            END as status
+        FROM 
+            submissions s
+            JOIN exams e ON s.exam_id = e.id
+            JOIN course_offerings co ON e.offering_id = co.id
+            JOIN courses c ON co.course_id = c.id
+            JOIN classes cl ON co.class_id = cl.id
+        WHERE 
+            s.student_id = #{studentId}
+        ORDER BY 
+            s.submitted_at DESC
+    </select>
+    
+    <!-- 获取学生的成绩详情 -->
+    <select id="findScoreDetailBySubmissionId" resultType="java.util.Map">
+        SELECT 
+            s.id as submissionId,
+            e.id as examId,
+            e.title as examTitle,
+            e.exam_type as examType,
+            c.title as courseName,
+            cl.name as className,
+            s.submitted_at as submittedAt,
+            s.total_score as totalScore,
+            CASE 
+                WHEN s.status = 0 THEN '进行中'
+                WHEN s.status = 1 THEN '已提交'
+                WHEN s.status = 2 THEN '已批改'
+                ELSE '未知'
+            END as status,
+            u.real_name as studentName,
+            COUNT(a.id) as questionCount,
+            SUM(CASE WHEN a.is_correct = 1 THEN 1 ELSE 0 END) as correctCount
+        FROM 
+            submissions s
+            JOIN exams e ON s.exam_id = e.id
+            JOIN course_offerings co ON e.offering_id = co.id
+            JOIN courses c ON co.course_id = c.id
+            JOIN classes cl ON co.class_id = cl.id
+            JOIN users u ON s.student_id = u.user_id
+            LEFT JOIN answers a ON s.id = a.submission_id
+        WHERE 
+            s.id = #{submissionId}
+        GROUP BY 
+            s.id, e.id, e.title, e.exam_type, c.title, cl.name, s.submitted_at, s.total_score, s.status, u.real_name
+    </select>
+    
+    <!-- 获取学生正在进行中的考试 -->
+    <select id="findOngoingExamsByStudentId" resultType="org.example.backend.entity.pojo.Exam">
+        SELECT 
+            e.id, 
+            e.title, 
+            e.exam_type as examType, 
+            e.start_time as startTime, 
+            e.end_time as endTime,
+            c.title as courseName,
+            cl.name as className,
+            u.real_name as creatorName,
+            'ongoing' as status,
+            TIMESTAMPDIFF(MINUTE, e.start_time, e.end_time) as duration
+        FROM 
+            exams e
+            JOIN course_offerings co ON e.offering_id = co.id
+            JOIN courses c ON co.course_id = c.id
+            JOIN classes cl ON co.class_id = cl.id
+            JOIN users u ON e.creator_id = u.user_id
+            JOIN enrollments en ON co.id = en.offering_id
+        WHERE 
+            en.student_id = #{studentId}
+            AND NOW() BETWEEN e.start_time AND e.end_time
+        ORDER BY 
+            e.start_time ASC
+    </select>
+    
+    <!-- 获取学生已完成的考试成绩，按提交时间排序 -->
+    <select id="findCompletedScoresByStudentId" resultType="java.util.Map">
+        SELECT 
+            s.id as submissionId,
+            e.id as examId,
+            e.title as examTitle,
+            e.exam_type as examType,
+            c.title as courseName,
+            cl.name as className,
+            s.submitted_at as submittedAt,
+            s.total_score as score,
+            CASE 
+                WHEN s.status = 0 THEN '进行中'
+                WHEN s.status = 1 THEN '已提交'
+                WHEN s.status = 2 THEN '已批改'
+                ELSE '未知'
+            END as status
+        FROM 
+            submissions s
+            JOIN exams e ON s.exam_id = e.id
+            JOIN course_offerings co ON e.offering_id = co.id
+            JOIN courses c ON co.course_id = c.id
+            JOIN classes cl ON co.class_id = cl.id
+        WHERE 
+            s.student_id = #{studentId}
+            AND s.status > 0  -- 已提交或已批改
+            AND s.total_score IS NOT NULL
+        ORDER BY 
+            s.submitted_at DESC
+        LIMIT #{limit}
+    </select>
+    
+</mapper> 

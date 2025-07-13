@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.backend.mapper.LearningStatisticsDetailMapper">
+
+    <!-- 插入学习统计详情 -->
+    <insert id="insert" parameterType="org.example.backend.entity.pojo.LearningStatisticsDetail" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO learning_statistics_detail (
+            student_id, course_id, chapter_id, duration, visit_count, last_visit_time, is_completed, updated_at
+        ) VALUES (
+            #{studentId}, #{courseId}, #{chapterId}, #{totalTime}, #{visitCount}, #{lastVisitTime}, #{completionStatus}, #{updatedAt}
+        )
+    </insert>
+    
+    <!-- 更新学习统计详情 -->
+    <update id="update" parameterType="org.example.backend.entity.pojo.LearningStatisticsDetail">
+        UPDATE learning_statistics_detail
+        <set>
+            <if test="totalTime != null">duration = #{totalTime},</if>
+            <if test="visitCount != null">visit_count = #{visitCount},</if>
+            <if test="lastVisitTime != null">last_visit_time = #{lastVisitTime},</if>
+            <if test="completionStatus != null">is_completed = #{completionStatus},</if>
+            updated_at = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 获取学生在课程中的学习统计详情 -->
+    <select id="getStudentCourseStatistics" resultMap="statisticsDetailResultMap">
+        SELECT 
+            lsd.id,
+            lsd.student_id,
+            lsd.course_id,
+            lsd.chapter_id,
+            lsd.duration,
+            lsd.visit_count,
+            lsd.last_visit_time,
+            lsd.is_completed,
+            lsd.updated_at,
+            c.title AS course_title,
+            cc.title AS chapter_title,
+            cc.duration AS chapter_total_duration
+        FROM learning_statistics_detail lsd
+        JOIN courses c ON lsd.course_id = c.id
+        JOIN course_chapters cc ON lsd.chapter_id = cc.id
+        WHERE lsd.student_id = #{studentId} AND lsd.course_id = #{courseId}
+        ORDER BY cc.order_num ASC
+    </select>
+    
+    <!-- 获取课程的总体学习情况统计 -->
+    <select id="getCourseStatisticsSummary" resultMap="statisticsDetailResultMap">
+        SELECT 
+            lsd.id,
+            lsd.student_id,
+            lsd.course_id,
+            lsd.chapter_id,
+            lsd.duration,
+            lsd.visit_count,
+            lsd.last_visit_time,
+            lsd.is_completed,
+            lsd.updated_at,
+            c.title AS course_title,
+            cc.title AS chapter_title,
+            cc.duration AS chapter_total_duration,
+            u.real_name AS student_name
+        FROM learning_statistics_detail lsd
+        JOIN courses c ON lsd.course_id = c.id
+        JOIN course_chapters cc ON lsd.chapter_id = cc.id
+        JOIN users u ON lsd.student_id = u.user_id
+        WHERE lsd.course_id = #{courseId}
+        ORDER BY lsd.student_id, cc.order_num ASC
+    </select>
+    
+    <!-- 学习统计详情结果映射 -->
+    <resultMap id="statisticsDetailResultMap" type="org.example.backend.entity.dto.LearningStatisticsDetailDTO">
+        <id property="id" column="id" />
+        <result property="studentId" column="student_id" />
+        <result property="courseId" column="course_id" />
+        <result property="courseTitle" column="course_title" />
+        <result property="chapterId" column="chapter_id" />
+        <result property="chapterTitle" column="chapter_title" />
+        <result property="duration" column="duration" />
+        <result property="visitCount" column="visit_count" />
+        <result property="lastVisitTime" column="last_visit_time" />
+        <result property="isCompleted" column="is_completed" />
+        <result property="updatedAt" column="updated_at" />
+        <!-- 删除错误的配置 -->
+        <!-- 改用内联计算或直接从SQL查询中计算 -->
+        <association property="completionPercentage" javaType="java.lang.Double"
+                     select="calculateCompletionPercentage" 
+                     column="{duration=duration,total=chapter_total_duration,isCompleted=is_completed}" />
+    </resultMap>
+    
+    <!-- 计算完成百分比的方法 -->
+    <select id="calculateCompletionPercentage" resultType="java.lang.Double">
+        SELECT 
+            CASE 
+                WHEN #{isCompleted} = 1 THEN 100.0
+                WHEN #{duration} IS NOT NULL AND #{total} > 0 THEN 
+                    LEAST(100.0, (#{duration} / 60.0) / #{total} * 100.0)
+                ELSE 0.0
+            END
+    </select>
+
+</mapper> 

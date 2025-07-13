@@ -3,7 +3,7 @@ import {useAuthStore} from '@/stores/counter.js'
 
 // 布局组件
 const TeacherLayout = () => import('@/components/layout/TeacherLayout.vue')
-// const StudentLayout = () => import('@/components/layout/StudentLayout.vue')
+const StudentLayout = () => import('@/components/layout/StudentLayout.vue')
 // const AdminLayout = () => import('@/components/layout/AdminLayout.vue')
 
 // 公共页面
@@ -24,8 +24,9 @@ const TeachingPlans = () => import('@/views/teacher/TeachingPlans.vue')
 const Scores = () => import('@/views/teacher/Scores.vue')
 
 // 学生页面
-// const StudentDashboard = () => import('@/views/student/Dashboard.vue')
-// const Practice = () => import('@/views/student/Practice.vue')
+const StudentDashboard = () => import('@/views/student/Dashboard.vue')
+const Practice = () => import('@/views/student/Practice.vue') // 旧页面，后续可删除
+const LearningCenter = () => import('@/views/student/LearningCenter.vue')
 
 // 管理员页面
 // const AdminDashboard = () => import('@/views/admin/Dashboard.vue')
@@ -113,7 +114,8 @@ const routes = [
         redirect: '/teacher/dashboard',
         meta: {
             requiresAuth: true,
-            role: 'teacher'
+            role: 'teacher',
+            requiresRole: 2
         },
         children: [
             {
@@ -123,6 +125,7 @@ const routes = [
                 meta: {
                     title: '教师工作台',
                     icon: 'el-icon-data-board',
+                    requiresRole: 2
                 }
             },
             {
@@ -132,6 +135,7 @@ const routes = [
                 meta: {
                     title: '智能备课工作台',
                     icon: 'el-icon-cpu',
+                    requiresRole: 2
                 }
             },
             {
@@ -141,6 +145,7 @@ const routes = [
                 meta: {
                     title: '题目生成',
                     icon: 'el-icon-magic-stick',
+                    requiresRole: 2
                 }
             },
             {
@@ -150,6 +155,7 @@ const routes = [
                 meta: {
                     title: '自动批改',
                     icon: 'el-icon-check',
+                    requiresRole: 2
                 }
             },
             {
@@ -159,6 +165,7 @@ const routes = [
                 meta: {
                     title: '学情分析',
                     icon: 'el-icon-data-analysis',
+                    requiresRole: 2
                 }
             },
             {
@@ -168,6 +175,7 @@ const routes = [
                 meta: {
                     title: '题库管理',
                     icon: 'el-icon-collection',
+                    requiresRole: 2
                 }
             },
             {
@@ -176,7 +184,8 @@ const routes = [
                 component: TeachingPlans,
                 meta: { 
                     title: '教学计划', 
-                    icon: 'el-icon-notebook-1' 
+                    icon: 'el-icon-notebook-1',
+                    requiresRole: 2
                 }
             },
             {
@@ -185,7 +194,8 @@ const routes = [
                 component: Exams,
                 meta: { 
                     title: '考核设计', 
-                    icon: 'el-icon-edit' 
+                    icon: 'el-icon-edit',
+                    requiresRole: 2 
                 }
             },
             {
@@ -194,7 +204,8 @@ const routes = [
                 component: Scores,
                 meta: { 
                     title: '成绩录入', 
-                    icon: 'el-icon-tickets' 
+                    icon: 'el-icon-tickets',
+                    requiresRole: 2
                 }
             },
             {
@@ -203,7 +214,8 @@ const routes = [
                 component: AiAssistant,
                 meta: { 
                     title: '智能助手', 
-                    icon: 'el-icon-chat-dot-round' 
+                    icon: 'el-icon-chat-dot-round',
+                    requiresRole: 2
                 }
             },
             {
@@ -212,7 +224,8 @@ const routes = [
                 component: StudentManagement,
                 meta: { 
                     title: '学生管理', 
-                    icon: 'el-icon-user-solid' 
+                    icon: 'el-icon-user-solid',
+                    requiresRole: 2
                 }
             },
             {
@@ -221,7 +234,8 @@ const routes = [
                 component: ExamEditor,
                 meta: { 
                     title: '新建考核', 
-                    icon: 'el-icon-plus' 
+                    icon: 'el-icon-plus',
+                    requiresRole: 2
                 }
             },
             {
@@ -231,90 +245,43 @@ const routes = [
                 props: true,
                 meta: { 
                     title: '编辑考核',
-                    hidden: true
+                    hidden: true,
+                    requiresRole: 2
                 }
             },
         ]
     },
-    /* 注释学生路由
     {
         path: '/student',
         component: StudentLayout,
         redirect: '/student/dashboard',
         meta: {
             requiresAuth: true,
-            role: 'student'
+            role: 'student',
+            requiresRole: 3
         },
         children: [
-            {
-                path: 'dashboard',
-                name: 'StudentDashboard',
-                component: StudentDashboard,
-                meta: {
-                    title: '学习中心',
-                    icon: 'el-icon-monitor',
-                }
-            },
-            {
-                path: 'practice',
-                name: 'Practice',
-                component: Practice,
-                meta: {
-                    title: '实时练习',
-                    icon: 'el-icon-edit-outline',
-                }
-            },
-            {
-                path: 'courses',
-                name: 'student-courses',
-                component: () => import('@/views/student/Courses.vue'),
-                meta: { title: '我的课程', requiresRole: 3 }
-            },
-            {
-                path: 'tasks',
-                name: 'student-tasks',
-                component: () => import('@/views/student/Tasks.vue'),
-                meta: { title: '练习与纠错', requiresRole: 3 }
-            },
-            {
-                path: 'exams',
-                name: 'student-exams',
-                component: () => import('@/views/student/Exams.vue'),
-                meta: { title: '我的考核', requiresRole: 3 }
-            },
-            {
-                path: 'resources',
-                name: 'student-resources',
-                component: () => import('@/views/student/Resources.vue'),
-                meta: { title: '学习资源', requiresRole: 3 }
-            },
-            {
-                path: 'ai-assistant',
-                name: 'student-ai-assistant',
-                component: () => import('@/views/student/AiAssistant.vue'),
-                meta: { title: '智能助手', requiresRole: 3 }
-            },
-            {
-                path: 'exam/:examId',
-                name: 'student-exam-taking',
-                component: () => import('@/views/student/ExamTaking.vue'),
-                meta: { title: '参加考试', requiresRole: 3 }
-            },
-            {
-                path: 'mistakes',
-                name: 'student-mistakes',
-                component: () => import('@/views/student/Mistakes.vue'),
-                meta: { title: '错题本', requiresRole: 3 }
-            },
-            {
-                path: 'scores',
-                name: 'student-scores',
-                component: () => import('@/views/student/Scores.vue'),
-                meta: { title: '我的成绩', requiresRole: 3 }
-            }
+            { path: 'dashboard', name: 'StudentDashboard', component: StudentDashboard, meta: { title: '学习中心', icon: 'el-icon-monitor', requiresRole: 3 } },
+            { path: 'learning/:courseId/:chapterId', name: 'LearningCenter', component: LearningCenter, meta: { title: '学习中心', hidden:true, requiresRole: 3 }, props: true },
+            { path: 'practice', name: 'Practice', component: Practice, meta: { title: '实时练习', hidden:true, requiresRole: 3 } },
+            { path: 'courses', name: 'student-courses', component: () => import('@/views/student/Courses.vue'), meta: { title: '我的课程', requiresRole: 3 } },
+            { path: 'course/:courseId', name: 'student-course-detail', component: () => import('@/views/student/CourseDetail.vue'), meta: { title: '课程详情', hidden:true, requiresRole: 3 }, props:true },
+            { path: 'tasks', name: 'student-tasks', component: () => import('@/views/student/Tasks.vue'), meta: { title: '计划', hidden:true, requiresRole: 3 } },
+            { path: 'exams', name: 'student-exams', component: () => import('@/views/student/ExamCenter.vue'), meta: { title: '考试中心', requiresRole: 3 } },
+            { path: 'resources', name: 'student-resources', component: () => import('@/views/student/Resources.vue'), meta: { title: '学习资源', requiresRole: 3 } },
+            { path: 'ai-assistant', name: 'student-ai-assistant', component: () => import('@/views/student/AiAssistant.vue'), meta: { title: '智能助手', requiresRole: 3 } },
+            { path: 'exam/:examId', name: 'student-exam-taking', component: () => import('@/views/student/ExamTaking.vue'), meta: { title: '参加考试', requiresRole: 3 }, props: true },
+            { path: 'mistakes', name: 'student-mistakes', component: () => import('@/views/student/Mistakes.vue'), meta: { title: '错题本', hidden:true, requiresRole: 3 } },
+            { path: 'scores', name: 'student-scores', component: () => import('@/views/student/Scores.vue'), meta: { title: '我的成绩', requiresRole: 3 } },
+            { path: 'scores/detail/:id', name: 'student-score-detail', component: () => import('@/views/student/ScoreDetail.vue'), meta: { title: '成绩详情', hidden:true, requiresRole: 3 }, props: true },
+            { path: 'adaptive-exam', name: 'student-adaptive-exam', component: () => import('@/views/student/AdaptiveExam.vue'), meta: { title: '自适应测试', requiresRole: 3 } },
+            { path: 'adaptive-exam/start', name: 'student-adaptive-exam-start', component: () => import('@/views/student/AdaptiveExamStart.vue'), meta: { title: '开始自适应测试', hidden:true, requiresRole: 3 } },
+            { path: 'adaptive-exam/:id', name: 'student-adaptive-exam-taking', component: () => import('@/views/student/AdaptiveExamTaking.vue'), meta: { title: '进行自适应测试', hidden:true, requiresRole: 3 }, props: true },
+            { path: 'adaptive-exam/report/:id', name: 'student-adaptive-exam-report', component: () => import('@/views/student/AdaptiveExamReport.vue'), meta: { title: '测试报告', hidden:true, requiresRole: 3 }, props: true },
+            { path: 'learning-timeline', name: 'student-learning-timeline', component: () => import('@/views/student/LearningTimeline.vue'), meta: { title: '学习轨迹', requiresRole: 3 } },
+            { path: 'achievements', name: 'student-achievements', component: () => import('@/views/student/Achievements.vue'), meta: { title: '我的成就', requiresRole: 3 } }
         ]
     },
-    */
     {
         path: '/:pathMatch(.*)*',
         redirect: '/login'
@@ -330,26 +297,82 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
     const authStore = useAuthStore()
     document.title = to.meta.title ? `${to.meta.title} - 智慧教学平台` : '智慧教学平台'
-    
+
     // 检查是否需要认证
     if (to.meta.requiresAuth && !authStore.isLoggedIn) {
         next({ name: 'Login' })
+        return
     }
-    // 角色检查
-    else if (to.meta.role && authStore.isLoggedIn && authStore.userRole !== to.meta.role) {
-        // 根据用户角色重定向到对应的首页
-        if (authStore.userRole === 'teacher') {
-            next({ path: '/teacher/dashboard' })
-        } else if (authStore.userRole === 'student') {
-            next({ path: '/student/dashboard' })
-        } else if (authStore.userRole === 'admin') {
-            next({ path: '/admin/dashboard' })
-        } else {
-            next({ name: 'Login' })
+    
+    // 检查用户角色ID
+    if (to.meta.requiresRole && authStore.user && authStore.user.roleId) {
+        // 如果路径需要特定角色ID但用户没有对应权限
+        if (to.meta.requiresRole !== authStore.user.roleId) {
+            // 根据用户角色ID重定向到对应的首页
+            switch (authStore.user.roleId) {
+                case 1:
+                    next({ path: '/admin/dashboard' })
+                    break
+                case 2:
+                    next({ path: '/teacher/dashboard' })
+                    break
+                case 3:
+                    next({ path: '/student/dashboard' })
+                    break
+                default:
+                    next({ name: 'Login' })
+            }
+            return
         }
-    } else {
-        next()
     }
+
+    // 对于根路径访问，根据登录状态和角色重定向
+    if (to.path === '/') {
+        if (!authStore.isLoggedIn) {
+            next({ name: 'Login' })
+            return
+        }
+        
+        // 根据角色ID重定向到相应首页
+        if (authStore.user && authStore.user.roleId) {
+            switch (authStore.user.roleId) {
+                case 1:
+                    next({ path: '/admin/dashboard' })
+                    break
+                case 2:
+                    next({ path: '/teacher/dashboard' })
+                    break
+                case 3:
+                    next({ path: '/student/dashboard' })
+                    break
+                default:
+                    next({ name: 'Login' })
+            }
+            return
+        }
+    } 
+    
+    // 对于登录页，如果已登录则重定向到相应首页
+    if (to.name === 'Login' && authStore.isLoggedIn && authStore.user && authStore.user.roleId) {
+        // 根据角色ID重定向到相应首页
+        switch (authStore.user.roleId) {
+            case 1:
+                next({ path: '/admin/dashboard' })
+                break
+            case 2:
+                next({ path: '/teacher/dashboard' })
+                break
+            case 3:
+                next({ path: '/student/dashboard' })
+                break
+            default:
+                next()
+        }
+        return
+    }
+    
+    // 其他情况正常放行
+    next()
 })
 
 export default router

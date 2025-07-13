@@ -15,8 +15,7 @@ const rememberMe = ref(false);
 // 表单数据
 const form = reactive({
   username: '',
-  password: '',
-  role: 'teacher', // 'teacher', 'student', 'admin'
+  password: ''
 });
 
 // 表单校验规则
@@ -39,65 +38,72 @@ const handleLogin = async (formEl) => {
     if (valid) {
       loading.value = true;
       try {
-        // 实际项目应该调用真实的登录接口
-        // const response = await post('/auth/login', form);
-        
-        // 模拟登录，根据角色返回不同的用户信息
-        const userInfo = mockLogin(form);
-        
-        // 登录成功
-        authStore.login(userInfo);
-        
-        // 根据角色跳转到不同的首页
-        if (form.role === 'admin') {
-          router.push('/admin/dashboard');
-        } else if (form.role === 'teacher') {
-          router.push('/teacher/dashboard');
-        } else {
-          router.push('/student/dashboard');
-        }
-        
-        ElMessage.success('登录成功！');
+        // 调用实际的登录接口
+        post('/api/auth/login', {
+          username: form.username,
+          password: form.password
+        }, 
+        (message, data) => {
+          // 登录成功处理
+          // 获取角色ID
+          const roleId = data.roleId;
+          let role = '';
+          let targetPath = '';
+          
+          // 根据roleId确定角色和跳转路径
+          switch (roleId) {
+            case 1:
+              role = 'admin';
+              targetPath = '/admin/dashboard';
+              break;
+            case 2:
+              role = 'teacher';
+              targetPath = '/teacher/dashboard';
+              break;
+            case 3:
+              role = 'student';
+              targetPath = '/student/dashboard';
+              break;
+            default:
+              ElMessage.error('未知的用户角色');
+              loading.value = false;
+              return;
+          }
+          
+          // 保存认证信息到authStore
+          authStore.login({
+            role: role,
+            token: data.token,
+            user: {
+              userId: data.userId,
+              username: form.username,
+              real_name: data.real_name || data.username,
+              avatar: data.avatar || '/avatars/default-avatar.png'
+            }
+          });
+          
+          ElMessage.success('登录成功！');
+          
+          // 跳转到对应角色的首页
+          router.push(targetPath);
+          
+          loading.value = false;
+        },
+        (message) => {
+          // 登录失败处理
+          ElMessage.error(message || '登录失败，请检查用户名和密码');
+          loading.value = false;
+        },undefined,  // 不传自定义错误处理
+            false )
       } catch (error) {
-        console.error('登录失败:', error);
-        ElMessage.error('登录失败，请检查用户名和密码');
-      } finally {
+        console.error('登录过程发生错误:', error);
+        ElMessage.error('登录系统出现错误，请稍后再试');
         loading.value = false;
       }
     } else {
       console.log('表单校验失败', fields);
     }
   });
-};
-
-// 模拟登录，根据角色返回不同的用户信息
-const mockLogin = (form) => {
-  const { username, role } = form;
-  
-  let roleId;
-  switch (role) {
-    case 'admin':
-      roleId = 1;
-      break;
-    case 'teacher':
-      roleId = 2;
-      break;
-    case 'student':
-      roleId = 3;
-      break;
-    default:
-      roleId = 2;
-  }
-  
-  return {
-    id: Math.floor(Math.random() * 1000),
-    username,
-    name: `${role === 'admin' ? '管理员' : role === 'teacher' ? '教师' : '学生'}_${username}`,
-    roleId,
-    role,
-    token: `mock_token_${role}_${Date.now()}`,
-    avatar: `https://i.pravatar.cc/150?u=${username}`
-  };
 };
 
 // 切换标签页
@@ -113,18 +119,18 @@ const toggleRememberMe = () => {
 // 表单引用
 const formRef = ref(null);
 
-// 切换角色
-const roleOptions = [
-  { label: '教师', value: 'teacher' },
-  { label: '学生', value: 'student' },
-  { label: '管理员', value: 'admin' }
-];
-
 // 示例账号快速填充
 const fillDemoAccount = (role) => {
-  form.role = role;
-  form.username = `demo_${role}`;
-  form.password = 'password';
+  if (role === 'teacher') {
+    form.username = 'demo_teacher';
+    form.password = 'password';
+  } else if (role === 'student') {
+    form.username = 'demo_student';
+    form.password = 'password';
+  } else if (role === 'admin') {
+    form.username = 'demo_admin';
+    form.password = 'password';
+  }
 };
 </script>
 
@@ -200,20 +206,6 @@ const fillDemoAccount = (role) => {
               label-position="top"
               @keyup.enter="handleLogin(formRef)"
             >
-              <!-- 角色选择 -->
-              <el-form-item label="登录角色">
-                <el-radio-group v-model="form.role" class="role-selector">
-                  <el-radio-button 
-                    v-for="option in roleOptions" 
-                    :key="option.value" 
-                    :label="option.value"
-                    :class="{ 'role-teacher': option.value === 'teacher', 'role-student': option.value === 'student', 'role-admin': option.value === 'admin' }"
-                  >
-                    {{ option.label }}
-                  </el-radio-button>
-                </el-radio-group>
-              </el-form-item>
-              
               <!-- 用户名 -->
               <el-form-item label="用户名" prop="username">
                 <el-input 
@@ -423,37 +415,6 @@ const fillDemoAccount = (role) => {
 
 .login-form-content {
   @apply space-y-4;
-}
-
-/* 角色选择器样式 */
-.role-selector {
-  @apply w-full flex;
-}
-
-:deep(.el-radio-button) {
-  @apply flex-1;
-}
-
-:deep(.el-radio-button__inner) {
-  @apply w-full flex justify-center transition-all duration-200;
-}
-
-:deep(.role-teacher .el-radio-button__inner.is-active) {
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
-  border-color: #1e3c72 !important;
-  box-shadow: -1px 0 0 0 #1e3c72 !important;
-}
-
-:deep(.role-student .el-radio-button__inner.is-active) {
-  background: linear-gradient(135deg, #134e5e 0%, #71b280 100%) !important;
-  border-color: #134e5e !important;
-  box-shadow: -1px 0 0 0 #134e5e !important;
-}
-
-:deep(.role-admin .el-radio-button__inner.is-active) {
-  background: linear-gradient(135deg, #232526 0%, #414345 100%) !important;
-  border-color: #232526 !important;
-  box-shadow: -1px 0 0 0 #232526 !important;
 }
 
 /* 登录选项 */

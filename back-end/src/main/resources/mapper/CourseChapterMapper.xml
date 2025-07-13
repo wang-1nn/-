@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.backend.mapper.CourseChapterMapper">
+
+    <!-- 根据课程ID获取所有章节及其内容的详细信息 -->
+    <select id="getChapterDetailsByCourseId" resultMap="chapterDetailResultMap">
+        SELECT 
+            cc.id AS chapter_id,
+            cc.course_id,
+            cc.title AS chapter_title,
+            cc.description AS chapter_description,
+            cc.order_num AS chapter_order,
+            cc.duration AS chapter_duration,
+            cc.status AS chapter_status,
+            cc.created_at AS chapter_created_at,
+            contents.id AS content_id,
+            contents.title AS content_title,
+            contents.content_type,
+            contents.content_url,
+            contents.content_text,
+            contents.duration AS content_duration,
+            contents.order_num AS content_order,
+            contents.status AS content_status,
+            contents.created_at AS content_created_at,
+            AVG(cr.rating) AS avg_rating,
+            COUNT(DISTINCT lsd.student_id) AS student_count
+        FROM course_chapters cc
+        LEFT JOIN chapter_contents contents ON cc.id = contents.chapter_id
+        LEFT JOIN chapter_ratings cr ON cc.id = cr.chapter_id
+        LEFT JOIN learning_statistics_detail lsd ON cc.id = lsd.chapter_id
+        WHERE cc.course_id = #{courseId} AND cc.status = 1
+        GROUP BY cc.id, contents.id
+        ORDER BY cc.order_num ASC, contents.order_num ASC
+    </select>
+    
+    <!-- 获取学生在课程中的章节学习进度 -->
+    <select id="getStudentChapterProgress" resultMap="chapterProgressResultMap">
+        SELECT 
+            cc.id AS chapter_id,
+            cc.course_id,
+            cc.title AS chapter_title,
+            cc.description AS chapter_description,
+            cc.order_num AS chapter_order,
+            cc.duration AS chapter_duration,
+            cc.status AS chapter_status,
+            cc.created_at AS chapter_created_at,
+            lsd.duration AS learning_duration,
+            lsd.visit_count,
+            lsd.is_completed,
+            lsd.last_visit_time,
+            CASE 
+                WHEN lsd.is_completed = 1 THEN 100.0
+                WHEN lsd.duration IS NOT NULL AND cc.duration > 0 THEN 
+                    LEAST(100.0, (lsd.duration / 60.0) / cc.duration * 100.0)
+                ELSE 0.0
+            END AS completion_percentage,
+            AVG(cr.rating) AS avg_rating
+        FROM course_chapters cc
+        LEFT JOIN learning_statistics_detail lsd ON cc.id = lsd.chapter_id AND lsd.student_id = #{studentId}
+        LEFT JOIN chapter_ratings cr ON cc.id = cr.chapter_id
+        WHERE cc.course_id = #{courseId} AND cc.status = 1
+        GROUP BY cc.id
+        ORDER BY cc.order_num ASC
+    </select>
+    
+    <!-- 章节详情结果映射 -->
+    <resultMap id="chapterDetailResultMap" type="org.example.backend.entity.dto.CourseChapterDTO">
+        <id property="id" column="chapter_id" />
+        <result property="courseId" column="course_id" />
+        <result property="title" column="chapter_title" />
+        <result property="description" column="chapter_description" />
+        <result property="orderNum" column="chapter_order" />
+        <result property="duration" column="chapter_duration" />
+        <result property="status" column="chapter_status" />
+        <result property="createdAt" column="chapter_created_at" />
+        <result property="averageRating" column="avg_rating" />
+        <result property="totalStudentCount" column="student_count" />
+        <collection property="contents" ofType="org.example.backend.entity.dto.ChapterContentDTO">
+            <id property="id" column="content_id" />
+            <result property="chapterId" column="chapter_id" />
+            <result property="title" column="content_title" />
+            <result property="contentType" column="content_type" />
+            <result property="contentUrl" column="content_url" />
+            <result property="contentText" column="content_text" />
+            <result property="duration" column="content_duration" />
+            <result property="orderNum" column="content_order" />
+            <result property="status" column="content_status" />
+            <result property="createdAt" column="content_created_at" />
+        </collection>
+    </resultMap>
+    
+    <!-- 章节学习进度结果映射 -->
+    <resultMap id="chapterProgressResultMap" type="org.example.backend.entity.dto.CourseChapterDTO">
+        <id property="id" column="chapter_id" />
+        <result property="courseId" column="course_id" />
+        <result property="title" column="chapter_title" />
+        <result property="description" column="chapter_description" />
+        <result property="orderNum" column="chapter_order" />
+        <result property="duration" column="chapter_duration" />
+        <result property="status" column="chapter_status" />
+        <result property="createdAt" column="chapter_created_at" />
+        <result property="completionPercentage" column="completion_percentage" />
+        <result property="isCompleted" column="is_completed" />
+        <result property="averageRating" column="avg_rating" />
+    </resultMap>
+
+</mapper> 

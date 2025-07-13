@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.backend.mapper.LearningNoteMapper">
+
+    <!-- 插入学习笔记 -->
+    <insert id="insert" parameterType="org.example.backend.entity.pojo.LearningNote" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO learning_notes (
+            student_id, course_id, chapter_id, content_id, note_content, time_point, created_at, updated_at
+        ) VALUES (
+            #{studentId}, #{courseId}, #{chapterId}, #{contentId}, #{noteContent}, #{timePoint}, #{createdAt}, #{updatedAt}
+        )
+    </insert>
+    
+    <!-- 更新学习笔记 -->
+    <update id="update" parameterType="org.example.backend.entity.pojo.LearningNote">
+        UPDATE learning_notes
+        <set>
+            <if test="noteContent != null">note_content = #{noteContent},</if>
+            <if test="timePoint != null">time_point = #{timePoint},</if>
+            <if test="updatedAt != null">updated_at = #{updatedAt},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 根据ID删除学习笔记 -->
+    <delete id="deleteById">
+        DELETE FROM learning_notes WHERE id = #{id}
+    </delete>
+    
+    <!-- 根据ID查询学习笔记 -->
+    <select id="selectById" resultType="org.example.backend.entity.pojo.LearningNote">
+        SELECT * FROM learning_notes WHERE id = #{id}
+    </select>
+    
+    <!-- 根据学生ID和课程ID获取笔记DTO列表 -->
+    <select id="getStudentNotesByCourse" resultMap="noteDetailResultMap">
+        SELECT 
+            ln.id,
+            ln.student_id,
+            ln.course_id,
+            ln.chapter_id,
+            ln.content_id,
+            ln.note_content,
+            ln.time_point,
+            ln.created_at,
+            ln.updated_at,
+            u.real_name AS student_name,
+            c.title AS course_title,
+            cc.title AS chapter_title,
+            cont.title AS content_title
+        FROM learning_notes ln
+        JOIN users u ON ln.student_id = u.user_id
+        JOIN courses c ON ln.course_id = c.id
+        JOIN course_chapters cc ON ln.chapter_id = cc.id
+        JOIN chapter_contents cont ON ln.content_id = cont.id
+        WHERE ln.student_id = #{studentId} AND ln.course_id = #{courseId}
+        ORDER BY ln.created_at DESC
+    </select>
+    
+    <!-- 获取学生的所有笔记 -->
+    <select id="getStudentAllNotes" resultMap="noteDetailResultMap">
+        SELECT 
+            ln.id,
+            ln.student_id,
+            ln.course_id,
+            ln.chapter_id,
+            ln.content_id,
+            ln.note_content,
+            ln.time_point,
+            ln.created_at,
+            ln.updated_at,
+            u.real_name AS student_name,
+            c.title AS course_title,
+            cc.title AS chapter_title,
+            cont.title AS content_title
+        FROM learning_notes ln
+        JOIN users u ON ln.student_id = u.user_id
+        JOIN courses c ON ln.course_id = c.id
+        JOIN course_chapters cc ON ln.chapter_id = cc.id
+        JOIN chapter_contents cont ON ln.content_id = cont.id
+        WHERE ln.student_id = #{studentId}
+        ORDER BY ln.created_at DESC
+    </select>
+    
+    <!-- 学习笔记详情结果映射 -->
+    <resultMap id="noteDetailResultMap" type="org.example.backend.entity.dto.LearningNoteDTO">
+        <id property="id" column="id" />
+        <result property="studentId" column="student_id" />
+        <result property="studentName" column="student_name" />
+        <result property="courseId" column="course_id" />
+        <result property="courseTitle" column="course_title" />
+        <result property="chapterId" column="chapter_id" />
+        <result property="chapterTitle" column="chapter_title" />
+        <result property="contentId" column="content_id" />
+        <result property="contentTitle" column="content_title" />
+        <result property="noteContent" column="note_content" />
+        <result property="timePoint" column="time_point" />
+        <result property="createdAt" column="created_at" />
+        <result property="updatedAt" column="updated_at" />
+    </resultMap>
+
+</mapper> 

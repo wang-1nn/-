@@ -11,6 +11,9 @@ import {useAuthStore} from '@/stores/counter.js'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 
+// 导入 ECharts
+import * as echarts from 'echarts'
+
 // 导入自定义样式
 import './assets/css/base.css'
 import './assets/css/main.css'
@@ -19,6 +22,18 @@ import './assets/css/style.css'
 // 导入自定义全局组件
 import BaseCard from '@/components/common/BaseCard.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
+
+// 导入 AOS 动画库
+import AOS from 'aos'
+import 'aos/dist/aos.css'
+
+// 初始化 AOS
+AOS.init({
+  duration: 800,
+  easing: 'ease-in-out',
+  once: true,
+  offset: 50
+})
 
 // Axios 基础配置
 axios.defaults.baseURL = 'http://localhost:8080'
@@ -30,7 +45,8 @@ const pinia = createPinia()
 app.use(pinia)
 
 const authStore = useAuthStore()
-// authStore.initAuth() // initAuth 不存在，暂时注释掉
+// 从本地存储恢复用户登录状态
+authStore.initializeFromStorage()
 
 app.use(router)
 app.use(ElementPlus, {
@@ -42,6 +58,9 @@ app.use(Antd)
 
 // 挂载 axios
 app.config.globalProperties.$axios = axios
+
+// 挂载 ECharts
+app.config.globalProperties.$echarts = echarts
 
 // 注册Element Plus图标
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {

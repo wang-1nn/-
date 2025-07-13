@@ -19,7 +19,7 @@ public interface UserMapper {
     int register(User user);
 
     @Update("update users set avatar = #{avatar} where user_id = #{userId}")
-    String updateAvatar(MultipartFile avatar,String userId);
+    int updateAvatar(@Param("avatar") String avatar, @Param("userId") String userId);
 
     @Select("select * from users where user_id = #{uid}")
     User getInfo(String uid);
@@ -31,4 +31,12 @@ public interface UserMapper {
     int updateLastLogin(String username, Date lastLogin);
 
 
+    /**
+     * 通过用户ID查询用户完整信息
+     * 
+     * @param userId 用户ID
+     * @return 用户对象
+     */
+    @Select("SELECT * FROM users WHERE user_id = #{userId}")
+    User findUserById(String userId);
 }

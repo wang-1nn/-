@@ -10,7 +10,19 @@ const router = useRouter();
 const authStore = useAuthStore();
 
 // 侧边栏状态
-const collapsed = ref(false);
+const collapsed = ref(true);
+const isHovering = ref(false);
+// 悬停展开
+const handleSidebarMouseEnter = () => {
+  if (collapsed.value) {
+    isHovering.value = true;
+  }
+};
+
+const handleSidebarMouseLeave = () => {
+  isHovering.value = false;
+};
+
 const toggleSidebar = () => {
   collapsed.value = !collapsed.value;
 };
@@ -85,32 +97,29 @@ const menuItems = [
     icon: 'el-icon-house',
     children: [
       { title: '学习首页', path: '/student/dashboard', icon: 'el-icon-monitor' },
+      { title: '我的课程', path: '/student/courses', icon: 'el-icon-notebook-1' },
       { title: '智能助手', path: '/student/ai-assistant', icon: 'el-icon-chat-dot-round' }
     ]
   },
   {
-    title: '课程学习',
-    icon: 'el-icon-reading',
+    title: '考试中心',
+    icon: 'el-icon-edit-outline',
     children: [
-      { title: '我的课程', path: '/student/courses', icon: 'el-icon-notebook-1' },
-      { title: '学习资源', path: '/student/resources', icon: 'el-icon-document' },
+      { title: '考试中心', path: '/student/exams', icon: 'el-icon-document-checked' }
     ]
   },
   {
-    title: '测验与练习',
-    icon: 'el-icon-edit-outline',
-    children: [
-      { title: '实时练习', path: '/student/practice', icon: 'el-icon-coordinate' },
-      { title: '我的考核', path: '/student/exams', icon: 'el-icon-document-checked' },
-      { title: '错题本', path: '/student/mistakes', icon: 'el-icon-warning-outline' }
-    ]
+    path: '/student/mistakes',
+    title: '错题本',
+    icon: 'el-icon-warning-outline'
   },
   {
     title: '个人中心',
     icon: 'el-icon-user',
     children: [
-      { title: '学习记录', path: '/student/tasks', icon: 'el-icon-time' },
       { title: '我的成绩', path: '/student/scores', icon: 'el-icon-data-analysis' },
+      { title: '学习轨迹', path: '/student/learning-timeline', icon: 'el-icon-time' },
+      { title: '我的成就', path: '/student/achievements', icon: 'el-icon-medal' }
     ]
   }
 ];
@@ -138,21 +147,32 @@ const toggleUserDropdown = () => {
 <template>
   <div class="app-container">
     <!-- 侧边栏 -->
-    <aside :class="['sidebar', collapsed ? 'sidebar-collapsed' : '']">
+    <aside
+      :class="[
+        'sidebar',
+        collapsed && !isHovering ? 'sidebar-collapsed' : 'sidebar-expanded'
+      ]"
+      @mouseenter="handleSidebarMouseEnter"
+      @mouseleave="handleSidebarMouseLeave"
+    >
       <div class="sidebar-header">
         <div class="logo-container">
           <img src="@/assets/logo.svg" alt="Logo" class="logo" />
-          <span v-show="!collapsed" class="logo-text">智慧学习平台</span>
+          <span v-show="!collapsed || isHovering" class="logo-text">智慧学习平台</span>
         </div>
         <button @click="toggleSidebar" class="collapse-btn">
-          <i :class="collapsed ? 'el-icon-d-arrow-right' : 'el-icon-d-arrow-left'"></i>
+          <i :class="collapsed && !isHovering ? 'el-icon-d-arrow-right' : 'el-icon-d-arrow-left'"></i>
         </button>
       </div>
+      <!-- 折叠时提示 -->
+      <transition name="fade">
+        <div v-if="collapsed && isHovering" class="hint px-4 pb-3 text-xs text-white/70">移动鼠标可快速浏览菜单</div>
+      </transition>
 
       <div class="sidebar-menu">
         <el-menu
           :default-active="activeTab"
-          :collapse="collapsed"
+          :collapse="collapsed && !isHovering"
           :unique-opened="true"
           router
           class="el-menu-vertical"
@@ -160,15 +180,16 @@ const toggleUserDropdown = () => {
           text-color="rgba(255, 255, 255, 0.85)"
           active-text-color="#ffffff"
         >
-          <template v-for="(menuGroup, index) in menuItems">
-            <el-sub-menu :index="String(index)" :key="`menu-group-${index}`">
+          <template v-for="(menuGroup, index) in menuItems" :key="'menu-group-' + index">
+            <!-- 带子菜单的项目 -->
+            <el-sub-menu v-if="menuGroup.children" :index="String(index)">
               <template #title>
                 <i :class="menuGroup.icon"></i>
                 <span>{{ menuGroup.title }}</span>
               </template>
               <el-menu-item 
                 v-for="(menuItem, idx) in menuGroup.children"
-                :key="`${index}-${idx}`"
+                :key="index + '-' + idx"
                 :index="menuItem.path"
                 @click="addTab(menuItem.path, menuItem.title)"
               >
@@ -176,6 +197,16 @@ const toggleUserDropdown = () => {
                 <span>{{ menuItem.title }}</span>
               </el-menu-item>
             </el-sub-menu>
+            
+            <!-- 直接链接的项目 -->
+            <el-menu-item 
+              v-else 
+              :index="menuGroup.path"
+              @click="addTab(menuGroup.path, menuGroup.title)"
+            >
+              <i :class="menuGroup.icon"></i>
+              <span>{{ menuGroup.title }}</span>
+            </el-menu-item>
           </template>
         </el-menu>
       </div>
@@ -211,11 +242,11 @@ const toggleUserDropdown = () => {
             <div class="user-dropdown relative">
               <div class="user-info cursor-pointer flex items-center" @click="toggleUserDropdown">
                 <img 
-                  src="https://i.pravatar.cc/100?img=5" 
+                  :src="authStore.user?.avatar || '/avatars/default-avatar.png'" 
                   alt="用户头像" 
                   class="user-avatar"
                 />
-                <span class="user-name ml-2">{{ authStore.user?.name || '学生用户' }}</span>
+                <span class="user-name ml-2">{{ authStore.user?.real_name || '学生用户' }}</span>
                 <i class="el-icon-caret-bottom ml-1"></i>
               </div>
               
@@ -298,18 +329,34 @@ const toggleUserDropdown = () => {
   position: fixed;
   z-index: 1001;
   width: 240px;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-  background: linear-gradient(135deg, #134e5e 0%, #71b280 100%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
+  border-radius: 0 16px 16px 0;
+  overflow: hidden;
+}
+
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M9 0h2v20H9V0zm25.134.84l1.732 1-10 17.32-1.732-1 10-17.32zm-20 20l1.732 1-10 17.32-1.732-1 10-17.32zM58.16 4.134l1 1.732-17.32 10-1-1.732 17.32-10zm-40 40l1 1.732-17.32 10-1-1.732 17.32-10zM80 9v2H60V9h20zM20 69v2H0v-2h20zm79.32-55l-1 1.732-17.32-10L82 4l17.32 10zm-80 80l-1 1.732-17.32-10L2 84l17.32 10zm96.546-75.84l-1.732 1-10-17.32 1.732-1 10 17.32zm-100 100l-1.732 1-10-17.32 1.732-1 10 17.32zM38.16 24.134l1 1.732-17.32 10-1-1.732 17.32-10zM60 29v2H40v-2h20zm19.32 5l-1 1.732-17.32-10L62 24l17.32 10zm16.546 4.16l-1.732 1-10-17.32 1.732-1 10 17.32zM111 40h-2V20h2v20zm3.134.84l1.732 1-10 17.32-1.732-1 10-17.32zM40 49v2H20v-2h20zm19.32 5l-1 1.732-17.32-10L42 44l17.32 10zm16.546 4.16l-1.732 1-10-17.32 1.732-1 10 17.32zM91 60h-2V40h2v20zm3.134.84l1.732 1-10 17.32-1.732-1 10-17.32zm24.026 3.294l1 1.732-17.32 10-1-1.732 17.32-10zM39.32 74l-1 1.732-17.32-10L22 64l17.32 10zm16.546 4.16l-1.732 1-10-17.32 1.732-1 10 17.32zM71 80h-2V60h2v20zm3.134.84l1.732 1-10 17.32-1.732-1 10-17.32zm24.026 3.294l1 1.732-17.32 10-1-1.732 17.32-10zM120 89v2h-20v-2h20zm-84.134 9.16l-1.732 1-10-17.32 1.732-1 10 17.32zM51 100h-2V80h2v20zm3.134.84l1.732 1-10 17.32-1.732-1 10-17.32zm24.026 3.294l1 1.732-17.32 10-1-1.732 17.32-10zM100 109v2H80v-2h20zm19.32 5l-1 1.732-17.32-10 1-1.732 17.32 10zM31 120h-2v-20h2v20z' fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
+  opacity: 0.08;
+  z-index: -1;
 }
 
 .sidebar-collapsed {
-  width: 64px;
+  width: 70px;
 }
 
 .sidebar-header {
   @apply flex items-center justify-between p-4 border-b border-opacity-20;
   height: 64px;
   border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(5px);
 }
 
 .logo-container {
@@ -321,6 +368,13 @@ const toggleUserDropdown = () => {
   @apply w-8 h-8;
   min-width: 32px;
   filter: brightness(0) invert(1);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
 }
 
 .logo-text {
@@ -344,23 +398,68 @@ const toggleUserDropdown = () => {
 /* 自定义菜单项样式 */
 :deep(.el-submenu__title) {
   @apply transition-all duration-200;
+  border-radius: 10px;
+  margin: 4px 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+:deep(.el-submenu__title)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
+  transform: translateX(-100%);
+  transition: transform 0.6s;
+}
+
+:deep(.el-submenu__title:hover)::before {
+  transform: translateX(100%);
 }
 
 :deep(.el-submenu__title:hover) {
-  background-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 :deep(.el-menu-item) {
   @apply transition-all duration-200;
+  border-radius: 10px;
+  margin: 4px 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+:deep(.el-menu-item)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
+  transform: translateX(-100%);
+  transition: transform 0.6s;
+}
+
+:deep(.el-menu-item:hover)::before {
+  transform: translateX(100%);
 }
 
 :deep(.el-menu-item:hover) {
-  background-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  transform: translateX(2px);
 }
 
 :deep(.el-menu-item.is-active) {
-  background-color: rgba(255, 255, 255, 0.2) !important;
+  background: linear-gradient(90deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 100%) !important;
   position: relative;
+  transform: translateX(3px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
 }
 
 :deep(.el-menu-item.is-active::before) {
@@ -369,18 +468,34 @@ const toggleUserDropdown = () => {
   left: 0;
   top: 0;
   height: 100%;
-  width: 4px;
-  background-color: #ffffff;
+  width: 3px;
+  background: linear-gradient(to bottom, #f0f9ff, #dbeafe, #bfdbfe);
   border-radius: 0 2px 2px 0;
+  box-shadow: 0 0 6px rgba(219, 234, 254, 0.5);
+}
+
+/* 收起状态下居中显示图标 */
+:deep(.el-menu--collapse .el-submenu__title) {
+  padding: 0 16px !important;
+  display: flex;
+  justify-content: center;
+}
+
+:deep(.el-menu--collapse .el-menu-item) {
+  padding: 0 16px !important;
+  display: flex;
+  justify-content: center;
 }
 
 /* 主容器样式 */
 .main-container {
-  @apply flex-1 flex flex-col ml-60 transition-all duration-300 ease-in-out;
+  @apply flex-1 flex flex-col;
+  margin-left: 70px;
+  transition: margin-left 0.3s ease-in-out;
 }
 
-.sidebar-collapsed + .main-container {
-  @apply ml-20;
+.sidebar:not(.sidebar-collapsed) + .main-container {
+  margin-left: 240px;
 }
 
 /* 头部导航样式 */
@@ -482,4 +597,141 @@ const toggleUserDropdown = () => {
 .page-container {
   @apply p-6 flex-1 overflow-auto;
 }
+
+/* ===== 顶部导航增强 ===== */
+.app-header {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.3s ease;
+}
+
+.app-header:hover {
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+}
+
+/* 搜索框聚焦高亮 */
+:deep(.header-search .el-input__wrapper) {
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+:deep(.header-search .el-input.is-focus .el-input__wrapper) {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+/* 通知铃铛动画 */
+@keyframes bell-ring {
+  0% { transform: rotate(0); }
+  10% { transform: rotate(-15deg); }
+  20% { transform: rotate(12deg); }
+  30% { transform: rotate(-10deg); }
+  40% { transform: rotate(8deg); }
+  50% { transform: rotate(-6deg); }
+  60% { transform: rotate(4deg); }
+  70% { transform: rotate(-2deg); }
+  80%, 100% { transform: rotate(0);
+  }
+}
+
+.notification-badge .el-button:hover i {
+  animation: bell-ring 1s ease-in-out;
+  transform-origin: top center;
+}
+
+/* 用户信息悬停高亮 */
+.user-info {
+  transition: background-color 0.2s;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.user-info:hover {
+  background-color: rgba(99, 102, 241, 0.08);
+}
+
+.user-dropdown-menu {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  animation: dropdown-fade 0.25s ease forwards;
+  transform-origin: top right;
+}
+@keyframes dropdown-fade {
+  0% { opacity: 0; transform: translateY(-8px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ===== 标签页美化 ===== */
+.tab-item {
+  transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.tab-item:hover {
+  transform: translateY(-2px);
+  background-color: rgba(99, 102, 241, 0.05);
+}
+.tab-item.active {
+  background: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%);
+  color: #4c1d95;
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.2);
+}
+.tab-close {
+  transition: opacity 0.2s;
+}
+.tab-item:hover .tab-close {
+  opacity: 1 !important;
+}
+/* ===== End ===== */
+
+/* ===== 侧边栏动画与配色 ===== */
+.sidebar{
+  @apply h-full bg-gradient-to-br text-white flex flex-col overflow-hidden transition-[width] duration-300 ease-in-out;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
+  width: 220px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06), 0 0 1px rgba(0, 0, 0, 0.1);
+}
+.sidebar-collapsed{ width: 64px; }
+/* 额外 class 方便过渡时区分 */
+.sidebar-expanded{ width: 220px; }
+
+/* 菜单 hover & active 效果 */
+:deep(.el-menu-vertical .el-menu-item){
+  transition: all .3s ease;
+  border-radius: 0.5rem;
+  margin: 0 6px;
+}
+:deep(.el-menu-vertical .el-menu-item:hover){
+  background-color: rgba(255,255,255,.12);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+:deep(.el-menu-vertical .el-menu-item.is-active){
+  background-image: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Sub-menu title hover */
+:deep(.el-sub-menu__title){
+  margin: 0 4px;
+  border-radius: 0.5rem;
+  transition: all .3s ease;
+}
+:deep(.el-sub-menu__title:hover){
+  background-color: rgba(255,255,255,.12);
+  transform: translateY(-2px);
+}
+
+/* 折叠提示 */
+.fade-enter-from, .fade-leave-to{ opacity:0; transform:translateY(-2px);} 
+.fade-enter-active, .fade-leave-active{ transition:all .2s ease; }
+
+/* 侧边栏底部装饰 */
+.sidebar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 150px;
+  background: linear-gradient(to top, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0) 100%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* ******************** */
 </style> 

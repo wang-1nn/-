@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.backend.mapper.ChapterContentMapper">
+
+    <!-- 插入章节内容 -->
+    <insert id="insert" parameterType="org.example.backend.entity.pojo.ChapterContent" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO chapter_contents (
+            chapter_id, title, content_type, content_url, content_text, 
+            duration, order_num, status, created_at
+        ) VALUES (
+            #{chapterId}, #{title}, #{contentType}, #{contentUrl}, #{contentText}, 
+            #{duration}, #{orderNum}, #{status}, #{createdAt}
+        )
+    </insert>
+    
+    <!-- 更新章节内容 -->
+    <update id="update" parameterType="org.example.backend.entity.pojo.ChapterContent">
+        UPDATE chapter_contents
+        <set>
+            <if test="title != null">title = #{title},</if>
+            <if test="contentType != null">content_type = #{contentType},</if>
+            <if test="contentUrl != null">content_url = #{contentUrl},</if>
+            <if test="contentText != null">content_text = #{contentText},</if>
+            <if test="duration != null">duration = #{duration},</if>
+            <if test="orderNum != null">order_num = #{orderNum},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 根据ID删除章节内容 -->
+    <delete id="deleteById">
+        DELETE FROM chapter_contents WHERE id = #{id}
+    </delete>
+    
+    <!-- 根据章节ID删除章节所有内容 -->
+    <delete id="deleteByChapterId">
+        DELETE FROM chapter_contents WHERE chapter_id = #{chapterId}
+    </delete>
+    
+    <!-- 根据ID查询章节内容 -->
+    <select id="selectById" resultType="org.example.backend.entity.pojo.ChapterContent">
+        SELECT * FROM chapter_contents WHERE id = #{id}
+    </select>
+    
+    <!-- 获取学生的内容学习进度 -->
+    <select id="getStudentContentProgress" resultMap="contentProgressResultMap">
+        SELECT 
+            cc.id AS content_id,
+            cc.chapter_id,
+            cc.title,
+            cc.content_type,
+            cc.content_url,
+            cc.content_text,
+            cc.duration,
+            cc.order_num,
+            cc.status,
+            cc.created_at,
+            lb.progress,
+            CASE WHEN lb.id IS NOT NULL THEN TRUE ELSE FALSE END AS is_viewed,
+            CASE WHEN lb.behavior_type = 'COMPLETE' THEN TRUE ELSE FALSE END AS is_completed,
+            COALESCE(lb.progress, 0) AS progress,
+            MAX(lb.created_at) AS last_view_time
+        FROM chapter_contents cc
+        LEFT JOIN learning_behaviors lb ON cc.id = lb.content_id 
+            AND lb.student_id = #{studentId}
+            AND lb.chapter_id = #{chapterId}
+        WHERE cc.chapter_id = #{chapterId} AND cc.status = 1
+        GROUP BY cc.id
+        ORDER BY cc.order_num ASC
+    </select>
+    
+    <!-- 内容学习进度结果映射 -->
+    <resultMap id="contentProgressResultMap" type="org.example.backend.entity.dto.ChapterContentDTO">
+        <id property="id" column="content_id" />
+        <result property="chapterId" column="chapter_id" />
+        <result property="title" column="title" />
+        <result property="contentType" column="content_type" />
+        <result property="contentUrl" column="content_url" />
+        <result property="contentText" column="content_text" />
+        <result property="duration" column="duration" />
+        <result property="orderNum" column="order_num" />
+        <result property="status" column="status" />
+        <result property="createdAt" column="created_at" />
+        <result property="isViewed" column="is_viewed" />
+        <result property="progress" column="progress" />
+        <result property="lastPosition" column="last_position" />
+    </resultMap>
+
+</mapper> 

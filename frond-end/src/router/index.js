@@ -9,19 +9,8 @@ const StudentLayout = () => import('@/components/layout/StudentLayout.vue')
 // 公共页面
 const Login = () => import('@/views/auth/Login.vue')
 
-// 教师页面
-const TeacherDashboard = () => import('@/views/teacher/Dashboard.vue')
-const LessonPrepWorkbench = () => import('@/views/teacher/LessonPrepWorkbench.vue')
-const QuestionBank = () => import('@/views/teacher/QuestionBank.vue')
-const QuestionGenerator = () => import('@/views/teacher/QuestionGenerator.vue')
-const AutoGrader = () => import('@/views/teacher/AutoGrader.vue')
-const Analysis = () => import('@/views/teacher/analysis.vue')
-const Exams = () => import('@/views/teacher/Exams.vue')
-const ExamEditor = () => import('@/views/teacher/ExamEditor.vue')
-const AiAssistant = () => import('@/views/teacher/AiAssistant.vue')
-const StudentManagement = () => import('@/views/teacher/StudentManagement.vue')
-const TeachingPlans = () => import('@/views/teacher/TeachingPlans.vue')
-const Scores = () => import('@/views/teacher/Scores.vue')
+// 导入模块化路由
+import teacherRoutes from './modules/teacher.js'
 
 // 学生页面
 const StudentDashboard = () => import('@/views/student/Dashboard.vue')
@@ -117,139 +106,7 @@ const routes = [
             role: 'teacher',
             requiresRole: 2
         },
-        children: [
-            {
-                path: 'dashboard',
-                name: 'TeacherDashboard',
-                component: TeacherDashboard,
-                meta: {
-                    title: '教师工作台',
-                    icon: 'el-icon-data-board',
-                    requiresRole: 2
-                }
-            },
-            {
-                path: 'lesson-prep-workbench',
-                name: 'LessonPrepWorkbench',
-                component: LessonPrepWorkbench,
-                meta: {
-                    title: '智能备课工作台',
-                    icon: 'el-icon-cpu',
-                    requiresRole: 2
-                }
-            },
-            {
-                path: 'question-generator',
-                name: 'QuestionGenerator',
-                component: QuestionGenerator,
-                meta: {
-                    title: '题目生成',
-                    icon: 'el-icon-magic-stick',
-                    requiresRole: 2
-                }
-            },
-            {
-                path: 'auto-grader',
-                name: 'AutoGrader',
-                component: AutoGrader,
-                meta: {
-                    title: '自动批改',
-                    icon: 'el-icon-check',
-                    requiresRole: 2
-                }
-            },
-            {
-                path: 'analysis',
-                name: 'Analysis',
-                component: Analysis,
-                meta: {
-                    title: '学情分析',
-                    icon: 'el-icon-data-analysis',
-                    requiresRole: 2
-                }
-            },
-            {
-                path: 'question-bank',
-                name: 'QuestionBank',
-                component: QuestionBank,
-                meta: {
-                    title: '题库管理',
-                    icon: 'el-icon-collection',
-                    requiresRole: 2
-                }
-            },
-            {
-                path: 'teaching-plans',
-                name: 'TeachingPlans',
-                component: TeachingPlans,
-                meta: { 
-                    title: '教学计划', 
-                    icon: 'el-icon-notebook-1',
-                    requiresRole: 2
-                }
-            },
-            {
-                path: 'exams',
-                name: 'Exams',
-                component: Exams,
-                meta: { 
-                    title: '考核设计', 
-                    icon: 'el-icon-edit',
-                    requiresRole: 2 
-                }
-            },
-            {
-                path: 'scores',
-                name: 'Scores',
-                component: Scores,
-                meta: { 
-                    title: '成绩录入', 
-                    icon: 'el-icon-tickets',
-                    requiresRole: 2
-                }
-            },
-            {
-                path: 'ai-assistant',
-                name: 'AiAssistant',
-                component: AiAssistant,
-                meta: { 
-                    title: '智能助手', 
-                    icon: 'el-icon-chat-dot-round',
-                    requiresRole: 2
-                }
-            },
-            {
-                path: 'students',
-                name: 'StudentManagement',
-                component: StudentManagement,
-                meta: { 
-                    title: '学生管理', 
-                    icon: 'el-icon-user-solid',
-                    requiresRole: 2
-                }
-            },
-            {
-                path: 'exams/new',
-                name: 'ExamCreate',
-                component: ExamEditor,
-                meta: { 
-                    title: '新建考核', 
-                    icon: 'el-icon-plus',
-                    requiresRole: 2
-                }
-            },
-            {
-                path: 'exams/:examId/edit',
-                name: 'ExamEdit',
-                component: ExamEditor,
-                props: true,
-                meta: { 
-                    title: '编辑考核',
-                    hidden: true,
-                    requiresRole: 2
-                }
-            },
-        ]
+        children: teacherRoutes
     },
     {
         path: '/student',
@@ -271,6 +128,7 @@ const routes = [
             { path: 'resources', name: 'student-resources', component: () => import('@/views/student/Resources.vue'), meta: { title: '学习资源', requiresRole: 3 } },
             { path: 'ai-assistant', name: 'student-ai-assistant', component: () => import('@/views/student/AiAssistant.vue'), meta: { title: '智能助手', requiresRole: 3 } },
             { path: 'exam/:examId', name: 'student-exam-taking', component: () => import('@/views/student/ExamTaking.vue'), meta: { title: '参加考试', requiresRole: 3 }, props: true },
+            { path: 'exams/take/:examId', name: 'student-exam-taking-alt', component: () => import('@/views/student/ExamTaking.vue'), meta: { title: '参加考试', requiresRole: 3 }, props: true },
             { path: 'mistakes', name: 'student-mistakes', component: () => import('@/views/student/Mistakes.vue'), meta: { title: '错题本', hidden:true, requiresRole: 3 } },
             { path: 'scores', name: 'student-scores', component: () => import('@/views/student/Scores.vue'), meta: { title: '我的成绩', requiresRole: 3 } },
             { path: 'scores/detail/:id', name: 'student-score-detail', component: () => import('@/views/student/ScoreDetail.vue'), meta: { title: '成绩详情', hidden:true, requiresRole: 3 }, props: true },

@@ -25,9 +25,9 @@
             JOIN courses c ON co.course_id = c.id
             JOIN classes cl ON co.class_id = cl.id
             JOIN users u ON e.creator_id = u.user_id
-            JOIN enrollments en ON co.id = en.offering_id
+            JOIN users student ON student.user_id = #{studentId}
         WHERE 
-            en.student_id = #{studentId}
+            e.offering_id = student.classId
         ORDER BY 
             e.start_time DESC
     </select>
@@ -57,8 +57,10 @@
             JOIN courses c ON co.course_id = c.id
             JOIN classes cl ON co.class_id = cl.id
             JOIN users u ON e.creator_id = u.user_id
+            JOIN users student ON student.user_id = #{studentId}
         WHERE 
             e.id = #{examId}
+            AND co.class_id = student.classId
     </select>
     
     <!-- 获取考试的题目列表 -->
@@ -224,8 +226,10 @@
             JOIN course_offerings co ON e.offering_id = co.id
             JOIN courses c ON co.course_id = c.id
             JOIN classes cl ON co.class_id = cl.id
+            JOIN users student ON student.user_id = #{studentId}
         WHERE 
             s.student_id = #{studentId}
+            AND co.class_id = student.classId
         ORDER BY 
             s.submitted_at DESC
     </select>
@@ -283,9 +287,9 @@
             JOIN courses c ON co.course_id = c.id
             JOIN classes cl ON co.class_id = cl.id
             JOIN users u ON e.creator_id = u.user_id
-            JOIN enrollments en ON co.id = en.offering_id
+            JOIN users student ON student.user_id = #{studentId}
         WHERE 
-            en.student_id = #{studentId}
+            co.class_id = student.classId
             AND NOW() BETWEEN e.start_time AND e.end_time
         ORDER BY 
             e.start_time ASC
@@ -314,8 +318,10 @@
             JOIN course_offerings co ON e.offering_id = co.id
             JOIN courses c ON co.course_id = c.id
             JOIN classes cl ON co.class_id = cl.id
+            JOIN users student ON student.user_id = #{studentId}
         WHERE 
             s.student_id = #{studentId}
+            AND co.class_id = student.classId
             AND s.status > 0  -- 已提交或已批改
             AND s.total_score IS NOT NULL
         ORDER BY 

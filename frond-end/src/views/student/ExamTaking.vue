@@ -359,12 +359,21 @@ const saveAnswer = () => {
   const questionId = currentQuestion.value.id || currentQuestion.value.questionId
   const answer = userAnswers.value[currentQuestionIndex.value]
   
-  if (questionId && answer !== undefined && submissionId) {
+  // 检查submissionId是否有效
+  if (!submissionId || submissionId === 'undefined') {
+    console.warn('保存答案失败：submissionId无效', submissionId);
+    return;
+  }
+  
+  if (questionId && answer !== undefined) {
+    console.log('保存答案:', questionId, answer, '提交ID:', submissionId);
     post(`/api/student/exams/submissions/${submissionId}/answers?questionId=${questionId}&answer=${encodeURIComponent(answer.toString())}`, {}, 
       (message) => {
         // 保存成功，静默处理
+        console.log('答案保存成功');
       }, 
       (message) => {
+        console.error('答案保存失败:', message);
         ElMessage.error(message || '保存答案失败')
       }
     )
@@ -400,6 +409,13 @@ const confirmSubmit = () => {
 
 // 提交考试
 const submitExam = () => {
+  // 检查submissionId是否有效
+  if (!submissionId || submissionId === 'undefined') {
+    console.error('提交考试失败：submissionId无效', submissionId);
+    ElMessage.error('提交失败：无法识别考试提交ID，请刷新页面重试');
+    return;
+  }
+
   // 先保存所有未保存的答案
   const savePromises = []
   
@@ -421,6 +437,8 @@ const submitExam = () => {
     }
   })
   
+  console.log('提交考试，提交ID:', submissionId, '答案数:', savePromises.length);
+  
   // 等待所有答案保存完成后再提交试卷
   Promise.all(savePromises)
     .then(() => {
@@ -429,14 +447,25 @@ const submitExam = () => {
         (message) => {
           ElMessage.success(message || '提交成功')
           showSubmitDialog.value = false
+          // 先移除beforeUnload事件监听器，避免跳转时触发提示
+          window.removeEventListener('beforeunload', beforeUnload)
+          // 清除计时器
+          if (timer.value) {
+            clearInterval(timer.value)
+          }
+          // 延迟一点执行跳转，确保消息显示
+          setTimeout(() => {
           router.push('/student/exams')
+          }, 500)
         },
         (message) => {
+          console.error('提交试卷失败:', message);
           ElMessage.error(message || '提交失败')
         }
       )
     })
-    .catch(() => {
+    .catch((error) => {
+      console.error('保存答案失败:', error);
       ElMessage.error('部分答案保存失败，请重试')
     })
 }
@@ -467,7 +496,48 @@ const initTimer = () => {
 
 // 加载考试详情
 const loadExamDetail = () => {
-  console.log('开始加载考试详情:', examId, '学生ID:', authStore.user.userId);
+  console.log('开始加载考试详情:', examId, '学生ID:', authStore.user.userId, '提交ID:', submissionId);
+  
+  // 检查submissionId是否有效
+  if (!submissionId || submissionId === 'undefined') {
+    console.warn('没有提供有效的提交ID，尝试获取或创建一个');
+    
+    // 尝试获取进行中的考试提交ID
+    post(`/api/student/exams/${examId}/resume?studentId=${authStore.user.userId}`, {},
+      (message, data) => {
+        if (data && data !== 'undefined') {
+          console.log('获取到提交ID:', data);
+          // 重新加载页面，带上submissionId
+          router.replace(`/student/exams/take/${examId}?submissionId=${data}`);
+        } else {
+          // 如果没有进行中的考试，尝试创建新的考试提交
+          post(`/api/student/exams/${examId}/start?studentId=${authStore.user.userId}`, {},
+            (message, data) => {
+              if (data && data !== 'undefined') {
+                console.log('创建新提交ID:', data);
+                router.replace(`/student/exams/take/${examId}?submissionId=${data}`);
+              } else {
+                ElMessage.error('无法开始考试：系统未返回有效的提交ID');
+                router.push('/student/exams');
+              }
+            },
+            (message) => {
+              ElMessage.error(message || '无法开始考试');
+              router.push('/student/exams');
+            }
+          );
+        }
+      },
+      (message) => {
+        ElMessage.error(message || '无法获取考试状态');
+        router.push('/student/exams');
+      }
+    );
+    
+    return; // 等待重定向，不继续执行下面的代码
+  }
+  
+  // 如果submissionId有效，继续加载考试详情
   get(`/api/student/exams/${examId}`, { studentId: authStore.user.userId },
     (message, data) => {
       console.log('考试详情加载成功:', data);
@@ -492,9 +562,15 @@ const loadExamDetail = () => {
 
 // 加载已保存的答案
 const loadSavedAnswers = () => {
-  if (submissionId) {
+  if (!submissionId || submissionId === 'undefined') {
+    console.warn('无法加载已保存的答案：submissionId无效', submissionId);
+    return;
+  }
+
+  console.log('加载已保存的答案，提交ID:', submissionId);
     get(`/api/student/exams/submissions/${submissionId}/answers`, {}, 
       (message, data) => {
+      console.log('已保存答案加载成功:', data);
         if (data && Array.isArray(data)) {
           data.forEach(answer => {
             const questionIndex = exam.value.questions.findIndex(q => q.id === answer.questionId || q.questionId === answer.questionId)
@@ -505,10 +581,9 @@ const loadSavedAnswers = () => {
         }
       },
       (message) => {
-        console.warn('无法加载已保存的答案:', message)
+      console.error('无法加载已保存的答案:', message)
       }
     )
-  }
 }
 
 // 离开页面前提示
@@ -524,6 +599,12 @@ const goBack = () => {
     cancelButtonText: '取消',
     type: 'warning'
   }).then(() => {
+    // 移除beforeUnload事件监听器
+    window.removeEventListener('beforeunload', beforeUnload)
+    // 清除计时器
+    if (timer.value) {
+      clearInterval(timer.value)
+    }
     router.push('/student/exams')
   }).catch(() => {})
 }

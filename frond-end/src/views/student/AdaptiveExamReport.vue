@@ -60,11 +60,11 @@
             <div class="stat-item bg-gray-50 rounded-lg p-3 text-center">
               <div class="text-sm text-gray-500 mb-1">能力水平</div>
               <div class="text-xl font-medium text-indigo-600">{{ reportData.abilityLevel || '未评定' }}</div>
-            </div>
+          </div>
             <div class="stat-item bg-gray-50 rounded-lg p-3 text-center">
               <div class="text-sm text-gray-500 mb-1">用时</div>
               <div class="text-xl font-medium">{{ formatDuration(examInfo.startTime, examInfo.endTime) }}</div>
-            </div>
+        </div>
       </div>
     </div>
     

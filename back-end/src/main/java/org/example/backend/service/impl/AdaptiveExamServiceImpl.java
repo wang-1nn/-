@@ -35,7 +35,7 @@ public class AdaptiveExamServiceImpl implements AdaptiveExamService {
     private final AdaptiveExamMapper adaptiveExamMapper;
     
 
-ChatClient chatClient;
+    ChatClient chatClient;
 
     @Autowired
     private final ObjectMapper objectMapper;

@@ -1,0 +1,120 @@
+:root {
+  /* 基础色板 - 以中性的 Slate（板岩色）为基础，专业且百搭 */
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+  --slate-950: #020617;
+
+  /* 主题色 - 选择饱和度较低的 Indigo（靛蓝色），现代且不刺眼 */
+  --primary-50: #eef2ff;
+  --primary-100: #e0e7ff;
+  --primary-200: #c7d2fe;
+  --primary-300: #a5b4fc;
+  --primary-400: #818cf8;
+  --primary-500: #6366f1; /* 主色调 */
+  --primary-600: #4f46e5;
+  --primary-700: #4338ca;
+  --primary-800: #3730a3;
+  --primary-900: #312e81;
+  --primary-950: #1e1b4b;
+
+  /* 功能色 (Semantic Colors) */
+  --success-color: #10b981;  /* 成功 */
+  --warning-color: #f59e0b;  /* 警告 */
+  --error-color: #ef4444;    /* 错误 */
+  --info-color: #3b82f6;     /* 信息 */
+
+  /* UI元素颜色 (Semantic UI Colors) - 将基础色板映射到具体用途 */
+  --background: var(--slate-50);         /* 页面背景 */
+  --foreground: var(--slate-950);        /* 主要文字颜色 */
+
+  --card: var(--slate-50);               /* 卡片背景 */
+  --card-foreground: var(--slate-950);   /* 卡片文字 */
+
+  --popover: var(--slate-50);            /* 弹窗/浮层背景 */
+  --popover-foreground: var(--slate-950);
+
+  --primary: var(--primary-500);         /* 主要交互元素背景 */
+  --primary-foreground: var(--primary-50); /* 主要交互元素文字 */
+
+  --secondary: var(--slate-100);         /* 次要交互元素背景 */
+  --secondary-foreground: var(--slate-800);
+
+  --muted: var(--slate-100);             /* 静默/禁用元素背景 */
+  --muted-foreground: var(--slate-500);  /* 静默/禁用元素文字 */
+
+  --accent: var(--slate-100);            /* 强调元素背景 (如徽章) */
+  --accent-foreground: var(--slate-800);
+
+  --destructive: var(--error-color);     /* 破坏性操作背景 */
+  --destructive-foreground: var(--slate-50);
+
+  --border: var(--slate-200);            /* 边框颜色 */
+  --input: var(--slate-200);             /* 输入框边框 */
+  --ring: var(--primary-400);            /* 焦点环颜色 (Focus Ring) */
+
+  /* 其他变量 */
+  --radius: 0.5rem;                      /* 全局圆角变量 */
+
+  /* 字体变量 */
+  --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-family-mono: 'Fira Code', 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* 阴影变量 */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+  
+  /* 动画时间 */
+  --transition-fast: 150ms;
+  --transition-normal: 250ms;
+  --transition-slow: 350ms;
+  
+  /* Z-Index 层级 */
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1020;
+  --z-index-modal-backdrop: 1040;
+  --z-index-modal: 1050;
+  --z-index-popover: 1060;
+  --z-index-tooltip: 1070;
+}
+
+/* 深色模式变量 */
+.dark-mode {
+  --background: var(--slate-950);
+  --foreground: var(--slate-50);
+  
+  --card: var(--slate-900);
+  --card-foreground: var(--slate-50);
+  
+  --popover: var(--slate-900);
+  --popover-foreground: var(--slate-50);
+  
+  --primary: var(--primary-500);
+  --primary-foreground: var(--primary-50);
+  
+  --secondary: var(--slate-800);
+  --secondary-foreground: var(--slate-100);
+  
+  --muted: var(--slate-800);
+  --muted-foreground: var(--slate-400);
+  
+  --accent: var(--slate-800);
+  --accent-foreground: var(--slate-100);
+  
+  --destructive: var(--error-color);
+  --destructive-foreground: var(--slate-50);
+  
+  --border: var(--slate-800);
+  --input: var(--slate-800);
+  --ring: var(--primary-500);
+} 

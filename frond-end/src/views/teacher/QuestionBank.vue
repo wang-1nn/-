@@ -98,11 +98,11 @@ const generateMockQuestions = () => {
   const types = ['single_choice', 'multiple_choice', 'true_false', 'fill_blank', 'short_answer', 'coding'];
   const difficulties = ['easy', 'medium', 'hard'];
   const subjects = ['计算机科学', '计算机网络', '数据库系统'];
-  
+
   return Array.from({ length: 20 }, (_, i) => {
     const type = types[Math.floor(Math.random() * types.length)];
     const typeLabel = questionTypes.find(t => t.value === type)?.label || '未知类型';
-    
+
     return {
       id: i + 1,
       title: `示例题目 ${i + 1}: ${getQuestionTitleByType(type)}`,
@@ -112,15 +112,15 @@ const generateMockQuestions = () => {
       subject: subjects[Math.floor(Math.random() * subjects.length)],
       chapter: `第${Math.floor(Math.random() * 10) + 1}章`,
       createTime: new Date(Date.now() - Math.random() * 10000000000).toLocaleString(),
-      options: type.includes('choice') ? 
-        ['选项A', '选项B', '选项C', '选项D'].map((opt, j) => ({ label: opt, value: String.fromCharCode(65 + j) })) : 
-        [],
-      answer: type === 'single_choice' ? 'A' : 
-              type === 'multiple_choice' ? ['A', 'C'] : 
-              type === 'true_false' ? '正确' : 
-              type === 'fill_blank' ? '答案内容' :
-              type === 'coding' ? 'function example() {\n  return "示例代码";\n}' :
-              '这是一个简答题的答案示例。详细解释了相关概念和原理。'
+      options: type.includes('choice') ?
+          ['选项A', '选项B', '选项C', '选项D'].map((opt, j) => ({ label: opt, value: String.fromCharCode(65 + j) })) :
+          [],
+      answer: type === 'single_choice' ? 'A' :
+          type === 'multiple_choice' ? ['A', 'C'] :
+              type === 'true_false' ? '正确' :
+                  type === 'fill_blank' ? '答案内容' :
+                      type === 'coding' ? 'function example() {\n  return "示例代码";\n}' :
+                          '这是一个简答题的答案示例。详细解释了相关概念和原理。'
     };
   });
 };
@@ -148,10 +148,10 @@ const getQuestionTitleByType = (type) => {
 // 开始批量生成题目
 const startGenerateQuestions = async () => {
   if (generating.value) return;
-  
+
   generating.value = true;
   generationProgress.value = 0;
-  
+
   try {
     // 模拟生成进度
     const totalSteps = 10;
@@ -159,14 +159,14 @@ const startGenerateQuestions = async () => {
       await new Promise(resolve => setTimeout(resolve, 500));
       generationProgress.value = (i / totalSteps) * 100;
     }
-    
+
     // 实际项目中应该发起API请求生成题目
     /*
     const response = await post('/api/question/generate-batch', {
       ...generationForm
     }, null, null, null, true);
     */
-    
+
     // 模拟新增题目
     const newQuestions = Array.from({ length: generationForm.count }, (_, i) => {
       return {
@@ -178,21 +178,21 @@ const startGenerateQuestions = async () => {
         subject: generationForm.subject,
         chapter: generationForm.chapter,
         createTime: new Date().toLocaleString(),
-        options: generationForm.type.includes('choice') ? 
-          ['选项A', '选项B', '选项C', '选项D'].map((opt, j) => ({ label: opt, value: String.fromCharCode(65 + j) })) : 
-          [],
-        answer: generationForm.type === 'single_choice' ? 'A' : 
-                generationForm.type === 'multiple_choice' ? ['A', 'C'] : 
-                generationForm.type === 'true_false' ? '正确' : 
-                generationForm.type === 'fill_blank' ? '答案内容' :
-                generationForm.type === 'coding' ? 'function example() {\n  return "示例代码";\n}' :
-                '这是一个简答题的答案示例。详细解释了相关概念和原理。'
+        options: generationForm.type.includes('choice') ?
+            ['选项A', '选项B', '选项C', '选项D'].map((opt, j) => ({ label: opt, value: String.fromCharCode(65 + j) })) :
+            [],
+        answer: generationForm.type === 'single_choice' ? 'A' :
+            generationForm.type === 'multiple_choice' ? ['A', 'C'] :
+                generationForm.type === 'true_false' ? '正确' :
+                    generationForm.type === 'fill_blank' ? '答案内容' :
+                        generationForm.type === 'coding' ? 'function example() {\n  return "示例代码";\n}' :
+                            '这是一个简答题的答案示例。详细解释了相关概念和原理。'
       };
     });
-    
+
     // 添加到列表开头
     questionList.value = [...newQuestions, ...questionList.value];
-    
+
     // 添加批次记录
     batchList.value = [{
       id: batchList.value.length + 1,
@@ -201,7 +201,7 @@ const startGenerateQuestions = async () => {
       count: generationForm.count,
       subject: generationForm.subject
     }, ...batchList.value];
-    
+
     ElMessage.success(`成功生成 ${generationForm.count} 道题目`);
     showGenerationForm.value = false;
   } catch (error) {
@@ -270,7 +270,7 @@ const regenerateQuestion = (question) => {
         </el-button>
       </div>
     </div>
-    
+
     <!-- 内容区域 -->
     <el-card class="main-content">
       <div class="content-layout">
@@ -281,10 +281,10 @@ const regenerateQuestion = (question) => {
             <el-button type="text" size="small">查看全部</el-button>
           </div>
           <div class="batch-list">
-            <div 
-              v-for="batch in batchList" 
-              :key="batch.id"
-              class="batch-item"
+            <div
+                v-for="batch in batchList"
+                :key="batch.id"
+                class="batch-item"
             >
               <div class="item-header">
                 <span class="item-title">{{ batch.name }}</span>
@@ -309,9 +309,9 @@ const regenerateQuestion = (question) => {
             <el-form :inline="true" :model="filters" size="small">
               <el-form-item>
                 <el-input
-                  v-model="filters.keyword"
-                  placeholder="搜索题目"
-                  prefix-icon="el-icon-search"
+                    v-model="filters.keyword"
+                    placeholder="搜索题目"
+                    prefix-icon="el-icon-search"
                 />
               </el-form-item>
               <el-form-item>
@@ -325,35 +325,35 @@ const regenerateQuestion = (question) => {
               <el-form-item>
                 <el-select v-model="filters.type" placeholder="题型">
                   <el-option label="全部" value=""></el-option>
-                  <el-option 
-                    v-for="type in questionTypes" 
-                    :key="type.value" 
-                    :label="type.label" 
-                    :value="type.value"
+                  <el-option
+                      v-for="type in questionTypes"
+                      :key="type.value"
+                      :label="type.label"
+                      :value="type.value"
                   ></el-option>
                 </el-select>
               </el-form-item>
               <el-form-item>
                 <el-select v-model="filters.difficulty" placeholder="难度">
                   <el-option label="全部" value=""></el-option>
-                  <el-option 
-                    v-for="diff in difficultyOptions" 
-                    :key="diff.value" 
-                    :label="diff.label" 
-                    :value="diff.value"
+                  <el-option
+                      v-for="diff in difficultyOptions"
+                      :key="diff.value"
+                      :label="diff.label"
+                      :value="diff.value"
                   ></el-option>
                 </el-select>
               </el-form-item>
             </el-form>
           </div>
-          
+
           <!-- 题目列表 -->
           <div class="question-list">
-            <div 
-              v-for="question in questionList" 
-              :key="question.id"
-              class="question-card"
-              @click="viewQuestionDetail(question)"
+            <div
+                v-for="question in questionList"
+                :key="question.id"
+                class="question-card"
+                @click="viewQuestionDetail(question)"
             >
               <div class="question-header">
                 <div class="question-type">
@@ -364,18 +364,18 @@ const regenerateQuestion = (question) => {
                   'bg-blue-100 text-blue-800': question.difficulty === 'medium',
                   'bg-red-100 text-red-800': question.difficulty === 'hard',
                 }">
-                  {{ 
-                    question.difficulty === 'easy' ? '简单' : 
-                    question.difficulty === 'medium' ? '中等' : 
-                    '困难'
+                  {{
+                    question.difficulty === 'easy' ? '简单' :
+                        question.difficulty === 'medium' ? '中等' :
+                            '困难'
                   }}
                 </div>
               </div>
-              
+
               <div class="question-title">
                 {{ question.title }}
               </div>
-              
+
               <!-- 选择题选项 -->
               <div v-if="question.type.includes('choice')" class="question-options">
                 <div v-for="option in question.options" :key="option.value" class="option-item">
@@ -383,13 +383,13 @@ const regenerateQuestion = (question) => {
                   <span class="option-content">{{ option.label }}</span>
                 </div>
               </div>
-              
+
               <div class="question-footer">
                 <div class="question-meta">
                   <span class="meta-item">{{ question.subject }}</span>
                   <span class="meta-item">{{ question.chapter }}</span>
                 </div>
-                
+
                 <div class="question-actions">
                   <el-button type="text" size="small" @click.stop="editQuestion(question)">编辑</el-button>
                   <el-button type="text" size="small" @click.stop="addToExam(question)">加入试卷</el-button>
@@ -401,31 +401,31 @@ const regenerateQuestion = (question) => {
         </div>
       </div>
     </el-card>
-    
+
     <!-- 题目详情抽屉 -->
     <el-drawer
-      v-model="drawerVisible"
-      title="题目详情"
-      size="50%"
-      :destroy-on-close="true"
+        v-model="drawerVisible"
+        title="题目详情"
+        size="50%"
+        :destroy-on-close="true"
     >
       <div v-if="currentQuestion" class="question-detail">
         <div class="detail-header">
           <div class="detail-meta">
             <el-tag size="small" effect="plain">{{ currentQuestion.typeLabel }}</el-tag>
-            <el-tag 
-              size="small" 
-              effect="plain" 
-              :type="
-                currentQuestion.difficulty === 'easy' ? 'success' : 
-                currentQuestion.difficulty === 'medium' ? 'primary' : 
+            <el-tag
+                size="small"
+                effect="plain"
+                :type="
+                currentQuestion.difficulty === 'easy' ? 'success' :
+                currentQuestion.difficulty === 'medium' ? 'primary' :
                 'danger'
               "
             >
-              {{ 
-                currentQuestion.difficulty === 'easy' ? '简单' : 
-                currentQuestion.difficulty === 'medium' ? '中等' : 
-                '困难'
+              {{
+                currentQuestion.difficulty === 'easy' ? '简单' :
+                    currentQuestion.difficulty === 'medium' ? '中等' :
+                        '困难'
               }}
             </el-tag>
             <span class="text-gray-500 text-sm">{{ currentQuestion.subject }} / {{ currentQuestion.chapter }}</span>
@@ -436,18 +436,18 @@ const regenerateQuestion = (question) => {
             <el-button type="primary" size="small" @click="addToExam(currentQuestion)">加入试卷</el-button>
           </div>
         </div>
-        
+
         <div class="detail-content">
           <div class="detail-title">
             <div class="title-number">题目ID: {{ currentQuestion.id }}</div>
             <div class="title-content">{{ currentQuestion.title }}</div>
           </div>
-          
+
           <!-- 选择题选项 -->
           <div v-if="currentQuestion.type.includes('choice')" class="detail-options">
             <div v-for="option in currentQuestion.options" :key="option.value" class="detail-option-item">
-              <div class="option-label" :class="{ 
-                'option-correct': 
+              <div class="option-label" :class="{
+                'option-correct':
                   (currentQuestion.type === 'single_choice' && currentQuestion.answer === option.value) ||
                   (currentQuestion.type === 'multiple_choice' && currentQuestion.answer.includes(option.value))
               }">
@@ -456,7 +456,7 @@ const regenerateQuestion = (question) => {
               <div class="option-content">{{ option.label }}</div>
             </div>
           </div>
-          
+
           <!-- 答案 -->
           <div class="detail-answer">
             <div class="answer-label">参考答案</div>
@@ -481,7 +481,7 @@ const regenerateQuestion = (question) => {
               </template>
             </div>
           </div>
-          
+
           <!-- 解析 -->
           <div class="detail-analysis">
             <div class="analysis-label">解析</div>
@@ -494,17 +494,17 @@ const regenerateQuestion = (question) => {
         </div>
       </div>
     </el-drawer>
-    
+
     <!-- 生成题目对话框 -->
     <el-dialog
-      v-model="showGenerationForm"
-      title="批量生成题目"
-      width="500px"
+        v-model="showGenerationForm"
+        title="批量生成题目"
+        width="500px"
     >
-      <el-form 
-        :model="generationForm" 
-        label-width="100px"
-        label-position="top"
+      <el-form
+          :model="generationForm"
+          label-width="100px"
+          label-position="top"
       >
         <el-form-item label="学科">
           <el-input v-model="generationForm.subject" placeholder="请输入学科"></el-input>
@@ -517,56 +517,56 @@ const regenerateQuestion = (question) => {
         </el-form-item>
         <el-form-item label="难度">
           <el-select v-model="generationForm.difficulty" placeholder="请选择难度" style="width: 100%">
-            <el-option 
-              v-for="item in difficultyOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
+            <el-option
+                v-for="item in difficultyOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
             ></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="题目类型">
           <el-select v-model="generationForm.type" placeholder="请选择题目类型" style="width: 100%">
-            <el-option 
-              v-for="item in questionTypes"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
+            <el-option
+                v-for="item in questionTypes"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
             ></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="知识点/主题">
-          <el-input 
-            v-model="generationForm.topics" 
-            type="textarea" 
-            :rows="2"
-            placeholder="请输入知识点或主题，多个用逗号分隔"
+          <el-input
+              v-model="generationForm.topics"
+              type="textarea"
+              :rows="2"
+              placeholder="请输入知识点或主题，多个用逗号分隔"
           ></el-input>
         </el-form-item>
         <el-form-item label="特殊要求">
-          <el-input 
-            v-model="generationForm.requirements" 
-            type="textarea" 
-            :rows="2"
-            placeholder="有特殊要求可以在这里说明"
+          <el-input
+              v-model="generationForm.requirements"
+              type="textarea"
+              :rows="2"
+              placeholder="有特殊要求可以在这里说明"
           ></el-input>
         </el-form-item>
       </el-form>
-      
+
       <div v-if="generating" class="generation-progress">
         <el-progress :percentage="generationProgress" :format="format => `${format}%`"></el-progress>
         <div class="text-center text-sm text-gray-500 mt-2">
           正在生成题目，请稍候...
         </div>
       </div>
-      
+
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="showGenerationForm = false">取消</el-button>
-          <el-button 
-            type="primary" 
-            :loading="generating"
-            @click="startGenerateQuestions"
+          <el-button
+              type="primary"
+              :loading="generating"
+              @click="startGenerateQuestions"
           >开始生成</el-button>
         </span>
       </template>

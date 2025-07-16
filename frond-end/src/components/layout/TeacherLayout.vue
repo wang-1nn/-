@@ -202,15 +202,13 @@ const menuItems = [
     title: '智能备课',
     icon: 'el-icon-edit-outline',
     children: [
-      { title: '智能备-工作台', path: '/teacher/lesson-prep-workbench', icon: 'el-icon-cpu' },
-      { title: '教学计划', path: '/teacher/teaching-plans', icon: 'el-icon-notebook-1' }
+      { title: '智能备-工作台', path: '/teacher/lesson-prep-workbench', icon: 'el-icon-cpu' }
     ]
   },
   {
     title: '题库与考核',
     icon: 'el-icon-document-checked',
     children: [
-      { title: '题目生成', path: '/teacher/question-generator', icon: 'el-icon-magic-stick' },
       { title: '题库管理', path: '/teacher/question-bank', icon: 'el-icon-collection' },
       { title: '考核设计', path: '/teacher/exams', icon: 'el-icon-edit' },
       { title: '自动批改', path: '/teacher/auto-grader', icon: 'el-icon-check' }

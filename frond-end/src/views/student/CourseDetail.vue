@@ -147,6 +147,13 @@ const getChapterStatus = (chapter) => {
 
 <template>
   <div class="course-detail-wrapper p-4 md:p-6" v-loading="loading">
+    <!-- 返回按钮 -->
+    <div class="mb-4">
+      <el-button icon="el-icon-back" @click="router.push('/student/courses')">
+        返回课程列表
+      </el-button>
+    </div>
+    
     <!-- 顶部封面 -->
     <div class="cover relative mb-6 rounded-2xl overflow-hidden shadow-lg">
       <img :src="course.image || 'https://placehold.co/800x400/e2e8f0/475569?text=Course+Image'" class="w-full h-48 md:h-64 object-cover" />

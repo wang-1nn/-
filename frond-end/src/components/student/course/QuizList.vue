@@ -88,10 +88,47 @@ const formatDate = (dateStr) => {
 const goToQuiz = (quiz) => {
   if (quiz.status === 3) { // 已完成
     // 查看结果
-    router.push(`/student/exams/result/${quiz.id}`)
+    router.replace(`/student/exams/result/${quiz.id}`)
   } else if (quiz.status === 1) { // 进行中
-    // 开始测验
-    router.push(`/student/exams/take/${quiz.id}`)
+    // 查询考试提交ID再跳转
+    console.log('开始进行中的考试:', quiz.id);
+    post(`/api/student/exams/${quiz.id}/resume?studentId=${authStore.user?.userId}`, {}, 
+      (message, data) => {
+        console.log('获取到进行中考试的提交ID:', data);
+        if (data && data !== 'undefined') {
+          // 跳转到考试页面，使用replace避免浏览器历史堆栈问题
+          router.replace(`/student/exams/take/${quiz.id}?submissionId=${data}`);
+        } else {
+          ElMessage.error('无法恢复考试状态，请联系管理员');
+        }
+      },
+      (message) => {
+        console.error('获取考试提交ID失败:', message);
+        ElMessage.error(message || '无法恢复考试状态');
+      }
+    )
+  } else if (quiz.status === 0) { // 未开始
+    // 开始测试，调用开始考试API并跳转
+    ElMessage.info('正在准备考试环境...')
+    console.log('开始新考试:', quiz.id);
+    post(`/api/student/exams/${quiz.id}/start?studentId=${authStore.user?.userId}`, {}, 
+      (message, data) => {
+        console.log('获取到新考试的提交ID:', data);
+        if (data && data !== 'undefined') {
+          // 延迟一点跳转，给后端足够时间处理
+          setTimeout(() => {
+            // 跳转到考试页面，使用replace避免浏览器历史堆栈问题
+            router.replace(`/student/exams/take/${quiz.id}?submissionId=${data}`);
+          }, 300)
+        } else {
+          ElMessage.error('无法开始考试：系统未返回有效的提交ID');
+        }
+      },
+      (message) => {
+        console.error('开始考试失败:', message);
+        ElMessage.error(message || '无法开始考试');
+      }
+    )
   } else {
     ElMessage.info('该测验暂时无法参与')
   }
@@ -196,6 +233,7 @@ onMounted(() => {
               size="small" 
               :icon="quiz.status === 3 ? 'el-icon-view' : 'el-icon-right'"
               plain
+              @click.stop="goToQuiz(quiz)"
             >
               {{ quiz.status === 3 ? '查看结果' : '开始' }}
             </el-button>

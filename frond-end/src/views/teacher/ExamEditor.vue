@@ -45,13 +45,13 @@ const addQuestionDrawerVisible = ref(false);
 // 获取考试详情
 const getExamDetail = async () => {
   if (!isEdit.value) return;
-  
+
   loading.value = true;
   try {
     // 这里应该是实际的API请求
     // 模拟API请求延迟
     await new Promise(resolve => setTimeout(resolve, 800));
-    
+
     // 模拟数据
     Object.assign(formData, {
       title: `${isEdit.value ? '编辑' : '新建'}考试 - ${examId.value || ''}`,
@@ -67,7 +67,7 @@ const getExamDetail = async () => {
       allowReview: true,
       status: 'draft'
     });
-    
+
     // 模拟题目数据
     questionList.value = Array.from({ length: 5 }, (_, i) => ({
       id: i + 1,
@@ -83,7 +83,7 @@ const getExamDetail = async () => {
       ] : [],
       answer: i === 0 ? 'A' : i === 1 ? ['A', 'C'] : i === 2 ? 'true' : '答案内容'
     }));
-    
+
   } catch (error) {
     console.error('获取考试详情失败:', error);
     ElMessage.error('获取考试详情失败');
@@ -99,27 +99,27 @@ const saveExam = async () => {
     ElMessage.warning('请输入考试标题');
     return;
   }
-  
+
   if (!formData.courseId) {
     ElMessage.warning('请选择所属课程');
     return;
   }
-  
+
   if (!formData.startTime || !formData.endTime) {
     ElMessage.warning('请设置开始和结束时间');
     return;
   }
-  
+
   if (questionList.value.length === 0) {
     ElMessage.warning('请至少添加一道题目');
     return;
   }
-  
+
   saving.value = true;
   try {
     // 模拟API请求
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     ElMessage.success(`${isEdit.value ? '更新' : '创建'}考试成功`);
     router.push('/teacher/exams');
   } catch (error) {
@@ -218,22 +218,22 @@ onMounted(() => {
           {{ isEdit ? '修改考试内容与设置' : '创建新的考试并添加题目' }}
         </p>
       </div>
-      
+
       <div class="header-actions">
         <el-button @click="cancelEdit">取消</el-button>
         <el-button type="primary" @click="previewExam">预览</el-button>
-        <el-button 
-          type="success" 
-          @click="publishExam"
+        <el-button
+            type="success"
+            @click="publishExam"
         >发布</el-button>
-        <el-button 
-          type="primary" 
-          @click="saveExam" 
-          :loading="saving"
+        <el-button
+            type="primary"
+            @click="saveExam"
+            :loading="saving"
         >保存</el-button>
       </div>
     </div>
-    
+
     <div class="editor-content">
       <el-row :gutter="20">
         <el-col :span="16">
@@ -242,12 +242,12 @@ onMounted(() => {
             <div class="panel-header">
               <h2 class="panel-title">基本信息</h2>
             </div>
-            
+
             <div class="panel-body">
-              <el-form 
-                :model="formData" 
-                label-width="100px"
-                label-position="top"
+              <el-form
+                  :model="formData"
+                  label-width="100px"
+                  label-position="top"
               >
                 <el-row :gutter="20">
                   <el-col :span="24">
@@ -255,61 +255,61 @@ onMounted(() => {
                       <el-input v-model="formData.title" placeholder="请输入考试标题" />
                     </el-form-item>
                   </el-col>
-                  
+
                   <el-col :span="12">
                     <el-form-item label="所属课程" required>
                       <el-select v-model="formData.courseId" placeholder="请选择课程" style="width: 100%">
                         <el-option
-                          v-for="item in courseOptions"
-                          :key="item.value"
-                          :label="item.label"
-                          :value="item.value"
+                            v-for="item in courseOptions"
+                            :key="item.value"
+                            :label="item.label"
+                            :value="item.value"
                         />
                       </el-select>
                     </el-form-item>
                   </el-col>
-                  
+
                   <el-col :span="12">
                     <el-form-item label="考试时长(分钟)" required>
                       <el-input-number
-                        v-model="formData.duration"
-                        :min="10"
-                        :max="240"
-                        :step="5"
-                        style="width: 100%"
+                          v-model="formData.duration"
+                          :min="10"
+                          :max="240"
+                          :step="5"
+                          style="width: 100%"
                       />
                     </el-form-item>
                   </el-col>
-                  
+
                   <el-col :span="24">
                     <el-form-item label="考试说明">
                       <el-input
-                        v-model="formData.description"
-                        type="textarea"
-                        :rows="3"
-                        placeholder="请输入考试说明，如考试范围、注意事项等"
+                          v-model="formData.description"
+                          type="textarea"
+                          :rows="3"
+                          placeholder="请输入考试说明，如考试范围、注意事项等"
                       />
                     </el-form-item>
                   </el-col>
-                  
+
                   <el-col :span="12">
                     <el-form-item label="开始时间" required>
                       <el-date-picker
-                        v-model="formData.startTime"
-                        type="datetime"
-                        placeholder="选择开始时间"
-                        style="width: 100%"
+                          v-model="formData.startTime"
+                          type="datetime"
+                          placeholder="选择开始时间"
+                          style="width: 100%"
                       />
                     </el-form-item>
                   </el-col>
-                  
+
                   <el-col :span="12">
                     <el-form-item label="结束时间" required>
                       <el-date-picker
-                        v-model="formData.endTime"
-                        type="datetime"
-                        placeholder="选择结束时间"
-                        style="width: 100%"
+                          v-model="formData.endTime"
+                          type="datetime"
+                          placeholder="选择结束时间"
+                          style="width: 100%"
                       />
                     </el-form-item>
                   </el-col>
@@ -317,7 +317,7 @@ onMounted(() => {
               </el-form>
             </div>
           </div>
-          
+
           <!-- 题目列表 -->
           <div class="panel question-panel mt-6">
             <div class="panel-header">
@@ -328,19 +328,19 @@ onMounted(() => {
                 </el-button>
               </div>
             </div>
-            
+
             <div class="panel-body">
               <div v-if="questionList.length === 0" class="empty-questions">
                 <el-empty description="暂无试题，请添加题目">
                   <el-button type="primary" @click="addQuestion">添加题目</el-button>
                 </el-empty>
               </div>
-              
+
               <div v-else class="question-list">
                 <div
-                  v-for="(question, index) in questionList"
-                  :key="index"
-                  class="question-item"
+                    v-for="(question, index) in questionList"
+                    :key="index"
+                    class="question-item"
                 >
                   <div class="question-header">
                     <div class="question-info">
@@ -351,7 +351,7 @@ onMounted(() => {
                         <span>{{ question.score }} 分</span>
                       </div>
                     </div>
-                    
+
                     <div class="question-actions">
                       <el-button-group>
                         <el-button type="text" size="small" @click="moveQuestion(index, 'up')" :disabled="index === 0">
@@ -361,17 +361,17 @@ onMounted(() => {
                           <i class="el-icon-arrow-down"></i>
                         </el-button>
                       </el-button-group>
-                      
+
                       <el-button type="text" size="small">编辑</el-button>
                       <el-button type="text" size="small" @click="removeQuestion(index)">删除</el-button>
                     </div>
                   </div>
-                  
+
                   <div class="question-content">
                     <div class="question-title">
                       {{ index + 1 }}. {{ question.content }}
                     </div>
-                    
+
                     <div v-if="['single_choice', 'multiple_choice'].includes(question.type)" class="question-options">
                       <div v-for="(option, optIndex) in question.options" :key="optIndex" class="option-item">
                         <span class="option-label">{{ option.value }}.</span>
@@ -379,87 +379,87 @@ onMounted(() => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div class="question-answer">
                     <span class="answer-label">参考答案：</span>
-                    <span class="answer-content">{{ 
-                      Array.isArray(question.answer) 
-                        ? question.answer.join('、') 
-                        : question.answer 
-                    }}</span>
+                    <span class="answer-content">{{
+                        Array.isArray(question.answer)
+                            ? question.answer.join('、')
+                            : question.answer
+                      }}</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </el-col>
-        
+
         <el-col :span="8">
           <!-- 考试设置 -->
           <div class="panel settings-panel">
             <div class="panel-header">
               <h2 class="panel-title">考试设置</h2>
             </div>
-            
+
             <div class="panel-body">
               <el-form :model="formData" label-width="120px">
                 <el-form-item label="总分值">
                   <el-input-number v-model="formData.totalScore" :min="1" :step="5" />
                 </el-form-item>
-                
+
                 <el-form-item label="及格分数线">
                   <el-input-number
-                    v-model="formData.passingScore"
-                    :min="1"
-                    :max="formData.totalScore"
-                    :step="5"
+                      v-model="formData.passingScore"
+                      :min="1"
+                      :max="formData.totalScore"
+                      :step="5"
                   />
                 </el-form-item>
-                
+
                 <el-form-item label="显示分数">
                   <el-switch v-model="formData.showScore" />
                 </el-form-item>
-                
+
                 <el-form-item label="随机题目顺序">
                   <el-switch v-model="formData.shuffleQuestions" />
                 </el-form-item>
-                
+
                 <el-form-item label="允许查看答案">
                   <el-switch v-model="formData.allowReview" />
                 </el-form-item>
               </el-form>
             </div>
           </div>
-          
+
           <!-- 分数统计 -->
           <div class="panel score-panel mt-6">
             <div class="panel-header">
               <h2 class="panel-title">分数统计</h2>
             </div>
-            
+
             <div class="panel-body">
               <div class="score-statistics">
                 <div class="statistic-item">
                   <div class="statistic-label">题目总数</div>
                   <div class="statistic-value">{{ questionList.length }}</div>
                 </div>
-                
+
                 <div class="statistic-item">
                   <div class="statistic-label">当前总分</div>
                   <div class="statistic-value">{{ questionList.reduce((sum, q) => sum + q.score, 0) }}</div>
                 </div>
-                
+
                 <div class="statistic-item">
                   <div class="statistic-label">目标总分</div>
                   <div class="statistic-value">{{ formData.totalScore }}</div>
                 </div>
               </div>
-              
+
               <div class="score-progress mt-4">
                 <div class="progress-label">完成度</div>
-                <el-progress 
-                  :percentage="Math.min(100, questionList.reduce((sum, q) => sum + q.score, 0) / formData.totalScore * 100)" 
-                  :format="() => `${questionList.reduce((sum, q) => sum + q.score, 0)}/${formData.totalScore}`"
+                <el-progress
+                    :percentage="Math.min(100, questionList.reduce((sum, q) => sum + q.score, 0) / formData.totalScore * 100)"
+                    :format="() => `${questionList.reduce((sum, q) => sum + q.score, 0)}/${formData.totalScore}`"
                 />
               </div>
             </div>
@@ -562,4 +562,4 @@ onMounted(() => {
 .empty-questions {
   @apply py-8;
 }
-</style> 
+</style>

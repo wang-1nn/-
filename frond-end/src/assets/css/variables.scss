@@ -1,0 +1,82 @@
+// 间距系统 (基于4px网格)
+$spacing-base: 4px;
+$spacing-xs: $spacing-base;      // 4px
+$spacing-sm: $spacing-base * 2;  // 8px
+$spacing-md: $spacing-base * 4;  // 16px
+$spacing-lg: $spacing-base * 6;  // 24px
+$spacing-xl: $spacing-base * 8;  // 32px
+$spacing-2xl: $spacing-base * 12; // 48px
+$spacing-3xl: $spacing-base * 16; // 64px
+$spacing-4xl: $spacing-base * 24; // 96px
+
+// 字号
+$font-size-xs: 12px;
+$font-size-sm: 14px;
+$font-size-md: 16px; // Base
+$font-size-lg: 18px;
+$font-size-xl: 20px;
+$font-size-2xl: 24px;
+$font-size-3xl: 30px;
+$font-size-4xl: 36px;
+$font-size-5xl: 48px;
+
+// 字重
+$font-weight-light: 300;
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// 行高
+$line-height-tight: 1.25;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.75;
+
+// 圆角
+$radius-sm: 4px;
+$radius-md: 8px;  // Base
+$radius-lg: 12px;
+$radius-xl: 16px;
+$radius-full: 9999px;
+
+// 阴影
+$shadow-sm: var(--shadow-sm);
+$shadow-md: var(--shadow-md);
+$shadow-lg: var(--shadow-lg);
+$shadow-xl: var(--shadow-xl);
+$shadow-inner: var(--shadow-inner);
+
+// Z-Index 层级
+$z-index-dropdown: var(--z-index-dropdown);
+$z-index-sticky: var(--z-index-sticky);
+$z-index-modal-backdrop: var(--z-index-modal-backdrop);
+$z-index-modal: var(--z-index-modal);
+$z-index-popover: var(--z-index-popover);
+$z-index-tooltip: var(--z-index-tooltip);
+
+// 屏幕断点
+$breakpoint-xs: 360px;
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;
+$breakpoint-2xl: 1536px;
+
+// 容器宽度
+$container-sm: 640px;
+$container-md: 768px;
+$container-lg: 1024px;
+$container-xl: 1280px;
+$container-2xl: 1536px;
+
+// 动画时间
+$transition-fast: var(--transition-fast);
+$transition-normal: var(--transition-normal);
+$transition-slow: var(--transition-slow);
+
+// 布局变量
+$sidebar-width: 280px;
+$sidebar-collapsed-width: 80px;
+$header-height: 64px;
+$footer-height: 60px;
+$tab-bar-height: 48px; 

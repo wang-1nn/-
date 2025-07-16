@@ -1,13 +1,13 @@
 <template>
-  <div class="flex flex-col gap-4 p-6 bg-white/90 dark:bg-slate-800/90 h-full rounded-2xl shadow-lg border border-indigo-200 dark:border-indigo-700 backdrop-blur">
+  <div class="flex flex-col gap-4 p-6 bg-white/90 h-full rounded-2xl shadow-lg border border-indigo-200 backdrop-blur">
     <!-- 上传区域 -->
     <el-upload
-      drag
-      :show-file-list="false"
-      action="#"
-      :http-request="() => {}"
-      :before-upload="beforeUpload"
-      class="w-full flex-1 upload-area rounded-xl border-2 border-dashed border-indigo-300 dark:border-indigo-600 flex items-center justify-center"
+        drag
+        :show-file-list="false"
+        action="#"
+        :http-request="() => {}"
+        :before-upload="beforeUpload"
+        class="w-full flex-1 upload-area rounded-xl border-2 border-dashed border-indigo-300 flex items-center justify-center"
     >
       <div class="text-center">
         <el-icon class="el-icon--upload text-indigo-500 text-4xl"><UploadFilled /></el-icon>
@@ -41,16 +41,16 @@ function beforeUpload(file) {
     method: 'POST',
     body: formData,
   })
-    .then(r => r.text())
-    .then(md => {
-      bus.emit('md-ready', md);
-      isParsing.value = false;
-    })
-    .catch(err => {
-      console.error(err);
-      ElMessage.error('上传失败');
-      isParsing.value = false;
-    });
+      .then(r => r.text())
+      .then(md => {
+        bus.emit('md-ready', md);
+        isParsing.value = false;
+      })
+      .catch(err => {
+        console.error(err);
+        ElMessage.error('上传失败');
+        isParsing.value = false;
+      });
 
   return false; // 阻止 el-upload 默认上传
 }

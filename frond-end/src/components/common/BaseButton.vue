@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, useSlots } from 'vue';
 
 const props = defineProps({
   // 按钮类型：primary, success, warning, danger, info, default
@@ -72,6 +72,8 @@ const props = defineProps({
   }
 });
 
+const slots = useSlots();
+
 // 发出点击事件
 const emit = defineEmits(['click']);
 
@@ -84,12 +86,12 @@ const handleClick = (event) => {
 // 计算按钮样式类
 const buttonClass = computed(() => {
   const classes = [`btn-${props.type}`];
-  
+
   // 大小
   if (props.size !== 'default') {
     classes.push(`btn-${props.size}`);
   }
-  
+
   // 形状和样式变体
   if (props.plain) classes.push('btn-plain');
   if (props.round) classes.push('btn-round');
@@ -99,11 +101,11 @@ const buttonClass = computed(() => {
   if (props.block) classes.push('btn-block');
   if (props.disabled) classes.push('btn-disabled');
   if (props.loading) classes.push('btn-loading');
-  if (props.icon && !props.loading && !props.children) classes.push('btn-icon-only');
-  
+  if (props.icon && !props.loading && !slots.default) classes.push('btn-icon-only');
+
   // 添加自定义类名
   if (props.customClass) classes.push(props.customClass);
-  
+
   return classes.join(' ');
 });
 
@@ -115,10 +117,10 @@ const isIconOnly = computed(() => {
 
 <template>
   <button
-    :class="['base-button', buttonClass]"
-    :type="nativeType"
-    :disabled="disabled || loading"
-    @click="handleClick"
+      :class="['base-button', buttonClass]"
+      :type="nativeType"
+      :disabled="disabled || loading"
+      @click="handleClick"
   >
     <!-- 加载图标 -->
     <span v-if="loading" class="btn-loading-icon">
@@ -126,10 +128,10 @@ const isIconOnly = computed(() => {
         <circle cx="50" cy="50" r="20" fill="none" />
       </svg>
     </span>
-    
+
     <!-- 图标 -->
     <i v-else-if="icon" :class="icon"></i>
-    
+
     <!-- 内容插槽 -->
     <span v-if="$slots.default" :class="{'ml-2': (loading || icon) && $slots.default}">
       <slot></slot>

@@ -67,7 +67,7 @@ public class ExamServiceImpl implements ExamService {
     public ExamDetailDTO getExamDetail(Long examId, Long studentId) {
         logger.info("获取考试详情: examId={}, studentId={}", examId, studentId);
         
-        Exam exam = examMapper.findExamById(examId);
+        Exam exam = examMapper.findExamById(examId, studentId);
         if (exam == null) {
             logger.warn("未找到考试: examId={}", examId);
             return null;
@@ -134,7 +134,7 @@ public class ExamServiceImpl implements ExamService {
         }
         
         // 检查考试是否可以开始
-        Exam exam = examMapper.findExamById(examId);
+        Exam exam = examMapper.findExamById(examId, studentId);
         if (exam == null) {
             logger.warn("未找到考试: examId={}", examId);
             return null;

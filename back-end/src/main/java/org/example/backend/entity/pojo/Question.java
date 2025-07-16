@@ -28,6 +28,7 @@ public class Question {
         private String analysis;       // 解析
         private BigDecimal score;      // 分值
         private Integer difficulty;    // 难度级别: 1-5
+        private String subject;        // 学科/科目
         private String createdBy;      // 创建者ID
         private Boolean isAiGenerated; // 是否AI生成
 
@@ -123,6 +124,14 @@ public class Question {
 
         public void setDifficulty(Integer difficulty) {
                 this.difficulty = difficulty;
+        }
+
+        public String getSubject() {
+                return subject;
+        }
+
+        public void setSubject(String subject) {
+                this.subject = subject;
         }
 
         public String getCreatedBy() {

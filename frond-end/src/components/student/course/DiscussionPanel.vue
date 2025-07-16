@@ -250,7 +250,7 @@ const likeMessage = (message) => {
   },
   (errorMessage) => {
     ElMessage.error(errorMessage || '操作失败')
-  })
+  },undefined,false)
 }
 
 // 回复消息

@@ -118,23 +118,23 @@ const examList = ref([
 // 过滤后的考试列表
 const filteredExams = computed(() => {
   let result = [...examList.value];
-  
+
   if (filters.examType) {
     result = result.filter(exam => exam.examType === filters.examType);
   }
-  
+
   if (filters.semester) {
     result = result.filter(exam => exam.semester === filters.semester);
   }
-  
+
   if (filters.subject) {
     result = result.filter(exam => exam.subject === filters.subject);
   }
-  
+
   if (filters.status) {
     result = result.filter(exam => exam.status === filters.status);
   }
-  
+
   return result;
 });
 
@@ -163,7 +163,7 @@ const openNewExamDialog = () => {
     examDate: '',
     selectedClasses: []
   });
-  
+
   showNewExamDialog.value = true;
 };
 
@@ -173,7 +173,7 @@ const createNewExam = () => {
     ElMessage.warning('请填写完整的考试信息');
     return;
   }
-  
+
   // 创建新考试
   const exam = {
     id: Date.now(),
@@ -189,11 +189,11 @@ const createNewExam = () => {
     classes: newExam.selectedClasses.map(id => classes.find(c => c.id === id)?.name || ''),
     createTime: new Date().toISOString().split('T')[0]
   };
-  
+
   examList.value.unshift(exam);
   showNewExamDialog.value = false;
   ElMessage.success('考试创建成功');
-  
+
   // 跳转到考试编辑页面
   router.push(`/teacher/exam-editor?id=${exam.id}`);
 };
@@ -219,7 +219,7 @@ const duplicateExam = (exam) => {
     status: 'draft',
     createTime: new Date().toISOString().split('T')[0]
   };
-  
+
   examList.value.unshift(newExam);
   ElMessage.success('复制成功');
 };
@@ -240,7 +240,7 @@ const publishExam = (exam) => {
     ElMessage.warning('考试题目为空，无法发布');
     return;
   }
-  
+
   ElMessageBox.confirm(`确定要发布"${exam.title}"吗？发布后学生将可以看到此考试。`, '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
@@ -299,69 +299,69 @@ const getSemesterText = (semester) => {
           </el-button>
         </div>
       </template>
-      
+
       <!-- 筛选区域 -->
       <div class="filter-section flex flex-wrap gap-4 mb-6">
         <div class="w-48">
           <el-select
-            v-model="filters.examType"
-            placeholder="考试类型"
-            clearable
-            style="width: 100%"
+              v-model="filters.examType"
+              placeholder="考试类型"
+              clearable
+              style="width: 100%"
           >
             <el-option
-              v-for="item in examTypes"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
+                v-for="item in examTypes"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
             />
           </el-select>
         </div>
-        
+
         <div class="w-60">
           <el-select
-            v-model="filters.semester"
-            placeholder="学期"
-            clearable
-            style="width: 100%"
+              v-model="filters.semester"
+              placeholder="学期"
+              clearable
+              style="width: 100%"
           >
             <el-option
-              v-for="item in semesters"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
+                v-for="item in semesters"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
             />
           </el-select>
         </div>
-        
-        <div class="w-48">
-          <el-select
-            v-model="filters.subject"
-            placeholder="科目"
-            clearable
-            style="width: 100%"
-          >
-            <el-option
-              v-for="item in subjects"
-              :key="item.id"
-              :label="item.name"
-              :value="item.name"
-            />
-          </el-select>
-    </div>
 
         <div class="w-48">
           <el-select
-            v-model="filters.status"
-            placeholder="状态"
-            clearable
-            style="width: 100%"
+              v-model="filters.subject"
+              placeholder="科目"
+              clearable
+              style="width: 100%"
           >
             <el-option
-              v-for="item in statusOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
+                v-for="item in subjects"
+                :key="item.id"
+                :label="item.name"
+                :value="item.name"
+            />
+          </el-select>
+        </div>
+
+        <div class="w-48">
+          <el-select
+              v-model="filters.status"
+              placeholder="状态"
+              clearable
+              style="width: 100%"
+          >
+            <el-option
+                v-for="item in statusOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
             />
           </el-select>
         </div>
@@ -376,13 +376,13 @@ const getSemesterText = (semester) => {
             创建考试
           </el-button>
         </div>
-        
+
         <el-table
-          v-else
-          :data="filteredExams"
-          border
-          style="width: 100%"
-          row-class-name="transition-colors duration-200 hover:bg-blue-50"
+            v-else
+            :data="filteredExams"
+            border
+            style="width: 100%"
+            row-class-name="transition-colors duration-200 hover:bg-blue-50"
         >
           <el-table-column prop="title" label="考试名称" min-width="180">
             <template #default="{ row }">
@@ -394,15 +394,15 @@ const getSemesterText = (semester) => {
               </div>
             </template>
           </el-table-column>
-          
+
           <el-table-column prop="subject" label="科目" width="120" />
-          
+
           <el-table-column prop="examType" label="类型" width="120">
             <template #default="{ row }">
               {{ getExamTypeText(row.examType) }}
             </template>
           </el-table-column>
-          
+
           <el-table-column prop="status" label="状态" width="100">
             <template #default="{ row }">
               <el-tag :type="getStatusType(row.status)" size="small">
@@ -410,36 +410,36 @@ const getSemesterText = (semester) => {
               </el-tag>
             </template>
           </el-table-column>
-          
+
           <el-table-column prop="examDate" label="考试日期" width="120" />
-          
+
           <el-table-column prop="duration" label="时长" width="80">
             <template #default="{ row }">
               {{ row.duration }} 分钟
             </template>
           </el-table-column>
-          
+
           <el-table-column prop="totalScore" label="总分" width="80" />
-          
+
           <el-table-column prop="questionCount" label="题量" width="80" />
-          
+
           <el-table-column label="操作" width="240">
             <template #default="{ row }">
-              <el-button 
-                type="primary" 
-                size="small" 
-                icon="el-icon-edit" 
-                @click="editExam(row)"
-                class="mr-1"
+              <el-button
+                  type="primary"
+                  size="small"
+                  icon="el-icon-edit"
+                  @click="editExam(row)"
+                  class="mr-1"
               >
                 编辑
               </el-button>
-              <el-button 
-                type="success" 
-                size="small" 
-                icon="el-icon-view" 
-                @click="previewExam(row)"
-                class="mr-1"
+              <el-button
+                  type="success"
+                  size="small"
+                  icon="el-icon-view"
+                  @click="previewExam(row)"
+                  class="mr-1"
               >
                 预览
               </el-button>
@@ -466,13 +466,13 @@ const getSemesterText = (semester) => {
         </el-table>
       </div>
     </BaseCard>
-    
+
     <!-- 新建考试对话框 -->
     <el-dialog
-      v-model="showNewExamDialog"
-      title="新建考试"
-      width="50%"
-      :before-close="() => showNewExamDialog = false"
+        v-model="showNewExamDialog"
+        title="新建考试"
+        width="50%"
+        :before-close="() => showNewExamDialog = false"
     >
       <el-form :model="newExam" label-width="100px">
         <el-form-item label="考试名称" required>
@@ -481,41 +481,41 @@ const getSemesterText = (semester) => {
         <el-form-item label="科目" required>
           <el-select v-model="newExam.subject" placeholder="请选择科目" style="width: 100%">
             <el-option
-              v-for="item in subjects"
-              :key="item.id"
-              :label="item.name"
-              :value="item.name"
+                v-for="item in subjects"
+                :key="item.id"
+                :label="item.name"
+                :value="item.name"
             />
           </el-select>
         </el-form-item>
         <el-form-item label="考试类型">
           <el-select v-model="newExam.examType" placeholder="请选择考试类型" style="width: 100%">
             <el-option
-              v-for="item in examTypes"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
+                v-for="item in examTypes"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
             />
           </el-select>
         </el-form-item>
         <el-form-item label="学期">
           <el-select v-model="newExam.semester" placeholder="请选择学期" style="width: 100%">
             <el-option
-              v-for="item in semesters"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
+                v-for="item in semesters"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
             />
           </el-select>
         </el-form-item>
         <el-form-item label="考试日期" required>
           <el-date-picker
-            v-model="newExam.examDate"
-            type="date"
-            placeholder="选择日期"
-            format="YYYY-MM-DD"
-            value-format="YYYY-MM-DD"
-            style="width: 100%"
+              v-model="newExam.examDate"
+              type="date"
+              placeholder="选择日期"
+              format="YYYY-MM-DD"
+              value-format="YYYY-MM-DD"
+              style="width: 100%"
           />
         </el-form-item>
         <el-form-item label="考试时长">
@@ -527,12 +527,12 @@ const getSemesterText = (semester) => {
         </el-form-item>
         <el-form-item label="参与班级" required>
           <el-checkbox-group v-model="newExam.selectedClasses">
-            <el-checkbox 
-              v-for="cls in classes" 
-              :key="cls.id" 
-              :label="cls.id"
-              border
-              class="mb-2 mr-2"
+            <el-checkbox
+                v-for="cls in classes"
+                :key="cls.id"
+                :label="cls.id"
+                border
+                class="mb-2 mr-2"
             >
               {{ cls.name }}
             </el-checkbox>
@@ -586,4 +586,4 @@ const getSemesterText = (semester) => {
 :deep(.el-checkbox.is-bordered.is-checked) {
   @apply border-blue-500 bg-blue-50;
 }
-</style> 
+</style>

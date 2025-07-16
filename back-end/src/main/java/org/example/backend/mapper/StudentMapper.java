@@ -107,9 +107,9 @@ public interface StudentMapper {
             "    END, '-500') AS color ",
             "FROM courses c ",
             "INNER JOIN course_offerings co ON c.id = co.course_id ",
-            "INNER JOIN enrollments e ON co.id = e.offering_id ",
-            "LEFT JOIN course_progress cp ON cp.course_id = c.id AND cp.student_id = e.student_id ",
-            "WHERE e.student_id = #{userId} ",
+            "INNER JOIN users student ON student.user_id = #{userId} ",
+            "LEFT JOIN course_progress cp ON cp.course_id = c.id AND cp.student_id = #{userId} ",
+            "WHERE co.class_id = student.classId ",
             "ORDER BY cp.updated_at DESC"
     })
     List<CourseProgressVO> findCourseProgress(@Param("userId") String userId);
@@ -132,11 +132,11 @@ public interface StudentMapper {
             "  IFNULL(cp.completion_percentage, 0) AS progress ",
             "FROM courses c ",
             "INNER JOIN course_offerings co ON c.id = co.course_id ",
-            "INNER JOIN enrollments e ON co.id = e.offering_id ",
-            "LEFT JOIN course_progress cp ON cp.course_id = c.id AND cp.student_id = e.student_id ",
-            "LEFT JOIN student_exams se ON se.user_id = e.student_id AND se.exam_id IN ",
+            "INNER JOIN users student ON student.user_id = #{userId} ",
+            "LEFT JOIN course_progress cp ON cp.course_id = c.id AND cp.student_id = #{userId} ",
+            "LEFT JOIN student_exams se ON se.user_id = #{userId} AND se.exam_id IN ",
             "  (SELECT id FROM exams WHERE offering_id = co.id) ",
-            "WHERE e.student_id = #{userId} ",
+            "WHERE co.class_id = student.classId ",
             "ORDER BY ",
             "  CASE ",
             "    WHEN cp.completion_percentage < 30 THEN 1 ",
@@ -346,14 +346,14 @@ public interface StudentMapper {
             "  EXISTS(SELECT 1 FROM course_favorites cf WHERE cf.user_id = #{userId} AND cf.course_id = c.id) AS isFavorite ", 
             "FROM courses c ",
             "INNER JOIN course_offerings co ON c.id = co.course_id ",
-            "INNER JOIN enrollments e ON co.id = e.offering_id ",
             "INNER JOIN users u ON c.teacher_id = u.user_id ",
+            "INNER JOIN users student ON student.user_id = #{userId} ",
             "LEFT JOIN (",
             "  SELECT course_id, student_id, MAX(completion_percentage) as completion_percentage ",
             "  FROM course_progress ",
             "  GROUP BY course_id, student_id",
-            ") cp ON cp.course_id = c.id AND cp.student_id = e.student_id ",
-            "WHERE e.student_id = #{userId} ",
+            ") cp ON cp.course_id = c.id AND cp.student_id = #{userId} ",
+            "WHERE co.class_id = student.classId ",
             "ORDER BY lastVisitTime DESC"
     })
     List<CourseDTO> findStudentCourses(@Param("userId") Long userId);
@@ -391,10 +391,10 @@ public interface StudentMapper {
             "  EXISTS(SELECT 1 FROM course_favorites cf WHERE cf.user_id = #{userId} AND cf.course_id = c.id) AS isFavorite ", 
             "FROM courses c ",
             "INNER JOIN course_offerings co ON c.id = co.course_id ",
-            "INNER JOIN enrollments e ON co.id = e.offering_id ",
             "INNER JOIN users u ON c.teacher_id = u.user_id ",
-            "LEFT JOIN course_progress cp ON cp.course_id = c.id AND cp.student_id = e.student_id ",
-            "WHERE e.student_id = #{userId} AND c.id = #{courseId}"
+            "INNER JOIN users student ON student.user_id = #{userId} ",
+            "LEFT JOIN course_progress cp ON cp.course_id = c.id AND cp.student_id = #{userId} ",
+            "WHERE c.id = #{courseId} AND co.class_id = student.classId"
     })
     CourseDetailDTO findCourseDetail(@Param("userId") Long userId, @Param("courseId") Long courseId);
 
@@ -571,9 +571,9 @@ public interface StudentMapper {
             "  END AS completedCount ",
             "FROM exams e ",
             "INNER JOIN course_offerings co ON e.offering_id = co.id ",
-            "INNER JOIN enrollments en ON co.id = en.offering_id ",
-            "LEFT JOIN student_exams se ON e.id = se.exam_id AND se.user_id = en.student_id ",
-            "WHERE en.student_id = #{userId} AND co.course_id = #{courseId} ",
+            "INNER JOIN users student ON student.user_id = #{userId} ",
+            "LEFT JOIN student_exams se ON e.id = se.exam_id AND se.user_id = #{userId} ",
+            "WHERE co.course_id = #{courseId} AND co.class_id = student.classId ",
             "ORDER BY e.start_time DESC"
     })
     List<QuizDTO> findCourseQuizzes(@Param("userId") Long userId, @Param("courseId") Long courseId);
@@ -608,9 +608,9 @@ public interface StudentMapper {
             "  END AS completedCount ",
             "FROM exams e ",
             "INNER JOIN course_offerings co ON e.offering_id = co.id ",
-            "INNER JOIN enrollments en ON co.id = en.offering_id ",
-            "LEFT JOIN student_exams se ON e.id = se.exam_id AND se.user_id = en.student_id ",
-            "WHERE e.id = #{quizId} AND en.student_id = #{userId}"
+            "INNER JOIN users student ON student.user_id = #{userId} ",
+            "LEFT JOIN student_exams se ON e.id = se.exam_id AND se.user_id = #{userId} ",
+            "WHERE e.id = #{quizId} AND co.class_id = student.classId"
     })
     QuizDTO findQuizDetail(@Param("userId") Long userId, @Param("quizId") Long quizId);
 
